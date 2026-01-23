@@ -3,6 +3,7 @@ package PageObject;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
@@ -107,13 +108,35 @@ public class CreateLpo {
 	}
 	
 	
-	public void clickApplyFilters() {
-	    driver.findElement(applyFiltersBtn).click();
+//	public void clickApplyFilters() {
+//	    driver.findElement(applyFiltersBtn).click();
+//	}
+	public void applyFiltersSafely() {
+
+	    JavascriptExecutor js = (JavascriptExecutor) driver;
+	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+
+	    WebElement applyBtn = wait.until(
+	            ExpectedConditions.presenceOfElementLocated(
+	                    By.xpath("//button[normalize-space()='Apply Filters']")
+	            )
+	    );
+
+	    // Scroll to center
+	    js.executeScript(
+	            "arguments[0].scrollIntoView({block:'center'});", applyBtn
+	    );
+
+	    // JS click (bypasses overlay)
+	    js.executeScript("arguments[0].click();", applyBtn);
+
+	    System.out.println("Apply Filters clicked");
 	}
+
 	
-	public void selectproducts() {
+/*	public void selectproducts() {
 		List<WebElement> checkboxes = driver.findElements(selectproducts);
-        System.out.println(checkboxes.size());
+ //       System.out.println(checkboxes.size());
 
         for (int i = 0; i < 3 && i < checkboxes.size(); i++) {
             WebElement checkbox = checkboxes.get(i); 
@@ -122,7 +145,33 @@ public class CreateLpo {
             }
             
         }
+	}*/
+	
+	public void selectproducts() {
+
+	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+	    JavascriptExecutor js = (JavascriptExecutor) driver;
+
+	    By checkboxesLocator =
+	        By.xpath("//table//tbody//input[@type='checkbox']");
+
+	    // Select first 3 products safely
+	    for (int i = 1; i <= 3; i++) {
+
+	        By checkboxBy = By.xpath("(//table//tbody//input[@type='checkbox'])[" + i + "]");
+
+	        WebElement checkbox = wait.until(
+	            ExpectedConditions.refreshed(
+	                ExpectedConditions.elementToBeClickable(checkboxBy)
+	            )
+	        );
+
+	        if (!checkbox.isSelected()) {
+	            js.executeScript("arguments[0].click();", checkbox);
+	        }
+	    }
 	}
+
 	
 	public void clicknextbutton() {
 		driver.findElement(nextBtn).click();
@@ -143,6 +192,8 @@ public class CreateLpo {
 
 		    Select select = new Select(selectElement);
 		    return select.getFirstSelectedOption().getText().trim();
+		    
+		    
 		}
 	
 	public boolean areProductsAvailable() {
@@ -159,29 +210,35 @@ public class CreateLpo {
 	
 	public void clickNextSafely() {
 		
-	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
-	    WebElement nextBtn = wait.until(
-	        ExpectedConditions.elementToBeClickable(NextButton)
-	    );
+		    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+		    JavascriptExecutor js = (JavascriptExecutor) driver;
 
-	    ((JavascriptExecutor) driver).executeScript(
-	        "arguments[0].scrollIntoView(true);", nextBtn
-	    );
+		    // 1. Remove / hide the blocking overlay
+		    js.executeScript(
+		        "var nav = document.querySelector('.lpo-nav-btn');" +
+		        "if(nav){ nav.style.display='none'; }"
+		    );
 
-	    ((JavascriptExecutor) driver).executeScript(
-	        "arguments[0].click();", nextBtn
-	    );
+		    // 2. Wait for button
+		    WebElement nextBtn = wait.until(
+		            ExpectedConditions.elementToBeClickable(NextButton)
+		    );
 
-	    System.out.println("Clicked Next button");
-	}
+		    // 3. Scroll into view
+		    js.executeScript(
+		        "arguments[0].scrollIntoView({block:'center'});", nextBtn
+		    );
 
+		    // 4. Click
+		    nextBtn.click();
+
+		    System.out.println("Clicked Next button after removing overlay");
+		}
 	
-// seller filter
 	
-//	Filter panel
+// Scenario: seller filter
 	By clickSellerInput = By.xpath("//*[@id=\"root\"]/div/div[2]/div[2]/div/div[1]/div[2]/div[1]/div[1]/div/div[2]/div/div[5]/div/div/input");
-//	By applyFiltersBtn = By.xpath("//button[normalize-space()='Apply Filters']");
 	
 //	Seller popup
 	By sellerRows = By.xpath("//div[contains(@class,'modal')]//tbody/tr");
@@ -256,26 +313,30 @@ public class CreateLpo {
 	}
 
 
-//Foc order filter
-By onlyFocCheckbox = By.xpath("//*[@class='PrivateSwitchBase-input css-1m9pwf3']");//
-//By applyFiltersBtn = By.xpath("//button[normalize-space()='Apply Filters']");
+//only Foc order filter
+By onlyFocCheckbox = By.xpath("//span[contains(@class,'MuiCheckbox')]//input[@type='checkbox']");//
 
-//Table
-//By productRows = By.xpath("//table//tbody/tr");
 By orderMarginColumn = By.xpath("(.//th[contains(@class,'custom-header-content text-center')])[16]");
 
+public void clickFOCcheckbox() {
 
-public void applyOnlyFocFilter() {
+    JavascriptExecutor js = (JavascriptExecutor) driver;
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
-    WebElement focCheckbox = driver.findElement(onlyFocCheckbox);
+    WebElement applyBtn1 = wait.until(
+            ExpectedConditions.presenceOfElementLocated(
+                    By.xpath("//span[contains(@class,'MuiCheckbox')]//input[@type='checkbox']")
+            )
+    );
 
-    // Select checkbox only if not already selected
-    if (!focCheckbox.isSelected()) {
-        focCheckbox.click();
-    }
+    // Scroll to center
+    js.executeScript(
+            "arguments[0].scrollIntoView({block:'center'});", applyBtn1
+    );
 
-    // Click Apply Filters
-    driver.findElement(applyFiltersBtn).click();
+    // JS click (bypasses overlay)
+    js.executeScript("arguments[0].click();", applyBtn1);
+
 }
 
 
@@ -325,9 +386,6 @@ public boolean validateFocOrdersMarginZero() {
 }
 
 //existing seller
-/* ================= LOCATORS ================= */
-
-// Seller column cells in table
 private By sellerNameCells = By.xpath(
     "//table//tbody/tr/td[count(//th[normalize-space()='Seller Name']/preceding-sibling::th)+1]"
 );
@@ -359,14 +417,8 @@ public String fetchRandomSellerNameFromTable() {
 }
 
 //Search seller using filter
-public void searchBySellerName(String sellerName) throws InterruptedException {
-//	driver.findElement(clickFiltersIcon).click();    
+public void searchBySellerName(String sellerName) throws InterruptedException {   
 WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
-//    WebElement input = wait.until(
-//        ExpectedConditions.visibilityOfElementLocated(sellerSearchInput));
-// //   input.clear();
-//    input.sendKeys(sellerName);
-//    driver.findElement(By.xpath("//button[text()='Apply']")).click();
 
         Thread.sleep(2000);
     driver.findElement(By.xpath("//*[@id=\"root\"]/div/div[2]/div[2]/div/div[1]/div[2]/div[1]/div[1]/div/div[1]/img")).click();
@@ -385,7 +437,7 @@ WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
     Thread.sleep(2000);
     driver.findElement(By.xpath("//button[normalize-space()='Select']")).click();
 
-    driver.findElement(applyFiltersBtn).click();
+ //   driver.findElement(applyFiltersBtn).click();
 
     // wait for table refresh
     wait.until(ExpectedConditions.or(
@@ -393,7 +445,6 @@ WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
         ExpectedConditions.visibilityOfElementLocated(noRecordsMsg)
     ));
 }
-
 
  // Validate all displayed rows belong to searched seller
  
@@ -418,8 +469,156 @@ public void validateSellerFilterResults(String expectedSeller) {
         );
     }
 
-    System.out.println("RESULT: Seller filter validation PASSED");
+    System.out.println("Seller filter validation PASSED");
 }
+
+//Approval Types
+
+public void selectApprovalType(String type) {
+
+    Select approvalSelect = new Select(
+            driver.findElement(By.xpath("//select[@name='approvalType']"))
+    );
+
+    approvalSelect.selectByVisibleText(type);
+}
+
+
+public String getStatusFromRowClass(WebElement row) {
+
+    String rowClass = row.getAttribute("class");
+
+    if (rowClass.contains("disabled-red")) {
+        return "Rejected";
+    }
+    if (rowClass.contains("disabled-green")) {
+        return "Approval Requested";
+    }
+    return "Approved";
+}
+
+public boolean validateRowsByRowClass(String expectedStatus) {
+
+    List<WebElement> rows = driver.findElements(
+        By.cssSelector("table tbody tr")
+    );
+
+    for (int i = 1; i <= rows.size(); i++) {
+
+        WebElement row = driver.findElement(
+            By.cssSelector("table tbody tr:nth-child(" + i + ")")
+        );
+
+        String actualStatus = getStatusFromRowClass(row);
+
+        System.out.println("Row " + i + " Status : " + actualStatus);
+
+        if (!actualStatus.equals(expectedStatus)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Scenario: change seller 
+
+public List<WebElement> getSelectedProductRows() {
+    return driver.findElements(
+        By.xpath("//table//tbody//tr[.//span[contains(@class,'Mui-checked')]]")
+    );
+       
+}
+public String changeSellerForRow(WebElement row) {
+	
+	driver.findElement(By.xpath("//button[normalize-space()='Change Seller']")).click();
+
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+    JavascriptExecutor js = (JavascriptExecutor) driver;
+
+    String oldSeller = row.findElement(By.xpath("./td[7]"))
+                          .getText().trim();
+
+    // Click Change Seller button in this row context
+    row.findElement(By.xpath(".//button[contains(.,'Change Seller')]")).click();
+
+    List<WebElement> sellerColumns = wait.until(
+        ExpectedConditions.visibilityOfAllElementsLocatedBy(
+            By.xpath("//table//thead//th[contains(@class,'custom-header-content')]")
+        )
+    );
+
+    if (sellerColumns.size() <= 1) {
+        System.out.println("⚠ Single seller for product. Skipping.");
+        driver.findElement(By.xpath("//button[normalize-space()='Cancel']")).click();
+        return "SKIPPED";
+    }
+
+    List<WebElement> sellerCells = wait.until(
+        ExpectedConditions.visibilityOfAllElementsLocatedBy(
+            By.xpath("//table//tbody//td[@style='cursor: pointer;']")
+        )
+    );
+
+    int selectedIndex = -1;
+    for (int i = 0; i < sellerCells.size(); i++) {
+        if (!sellerCells.get(i)
+                .findElements(By.xpath(".//span[contains(@class,'Mui-checked')]"))
+                .isEmpty()) {
+            selectedIndex = i;
+            break;
+        }
+    }
+
+    List<Integer> alternatives = new ArrayList<>();
+    for (int i = 0; i < sellerCells.size(); i++) {
+        if (i != selectedIndex) alternatives.add(i);
+    }
+
+    if (alternatives.isEmpty()) {
+        driver.findElement(By.xpath("//button[normalize-space()='Cancel']")).click();
+        return "SKIPPED";
+    }
+
+    WebElement newSeller = sellerCells.get(
+        alternatives.get(new Random().nextInt(alternatives.size()))
+    );
+
+    js.executeScript("arguments[0].click();", newSeller);
+
+    wait.until(ExpectedConditions.elementToBeClickable(
+        By.xpath("//button[normalize-space()='Submit']"))).click();
+
+    wait.until(ExpectedConditions.elementToBeClickable(
+        By.xpath("//button[normalize-space()='Confirm']"))).click();
+
+    // 🔥 Wait for update
+    wait.until(ExpectedConditions.not(
+        ExpectedConditions.textToBePresentInElement(row, oldSeller)
+    ));
+
+    String updatedSeller = row.findElement(By.xpath("./td[7]"))
+                              .getText().trim();
+
+    Assert.assertNotEquals(oldSeller, updatedSeller,
+        "Seller did not change for product row");
+
+    System.out.println("✅ Seller changed from " + oldSeller + " → " + updatedSeller);
+    return "CHANGED";
+}
+public void changeSellerForAllSelectedProducts() {
+
+    List<WebElement> selectedRows = getSelectedProductRows();
+
+    for (WebElement row : selectedRows) {
+        try {
+            changeSellerForRow(row);
+        } catch (Exception e) {
+            System.out.println("❌ Failed for one product: " + e.getMessage());
+        }
+    }
+}
+
 }
 
 

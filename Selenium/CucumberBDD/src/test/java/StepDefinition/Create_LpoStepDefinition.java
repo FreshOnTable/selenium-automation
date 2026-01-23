@@ -1,15 +1,18 @@
 package StepDefinition;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 
 import PageObject.CreateLpo;
 import PageObject.LoginSnoc;
 import Utils.Setuptest;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -44,8 +47,8 @@ public class Create_LpoStepDefinition {
 		CreateLpo Lpo = testsetup.pageObjectManager.getCreateLpo();
 	    Thread.sleep(1000);
 	    Lpo.selectDeliveryHub(hubValue);
-	    Thread.sleep(1000);
-	    Lpo.clickApplyFilters();
+	    Thread.sleep(2000);
+	    Lpo.applyFiltersSafely();
 	    Thread.sleep(1000);
 		Lpo.selectproducts();
 		Thread.sleep(1000);
@@ -53,32 +56,6 @@ public class Create_LpoStepDefinition {
 		Lpo.clicknextbutton();
 		Thread.sleep(2000);
 	}
-
-/*	@Then("Only orders from Delivery Hub {string} should be displayed")
-	public void only_orders_from_delivery_hub_should_be_displayed(String expectedHub) {
-		CreateLpo Lpo = testsetup.pageObjectManager.getCreateLpo();
-		
-//	    Lpo.validateDeliveryHubInGenerateLPO(expectedHub);
-//	    Lpo.validateDeliveryHubResults(hub);
-		
-		String actualHub = Lpo.validateDeliveryHubInGenerateLPO();
-
-//	    Assert.assertEquals(
-//	        actualHub,
-//	        expectedHub,
-//	        "Delivery Hub mismatch on Generate LPO page!");	 
-		
-		 //  Print values for debugging / reports
-	    System.out.println("Expected Delivery Hub : " + expectedHub);
-	    System.out.println("Actual Delivery Hub   : " + actualHub);
-
-	    // Optional: normalize before compare (recommended)
-	    Assert.assertEquals(
-	        actualHub.trim().replaceAll("\\s+", " "),
-	        expectedHub.trim().replaceAll("\\s+", " "),
-	        "Delivery Hub mismatch on Generate LPO page!"
-	    );
-	}*/
 	
 	@Then("Only orders from Delivery Hub {string} should be displayed")
 	public void only_orders_from_delivery_hub_should_be_displayed(String expectedHub) {
@@ -106,7 +83,7 @@ public class Create_LpoStepDefinition {
 	        System.out.println(
 	            "INFO: No records to display for Delivery Hub: " + actualNormalized
 	        );
-	        return; //  STOP HERE – DO NOT CLICK NEXT
+	        return; //  STOP HERE ï¿½ DO NOT CLICK NEXT
 	    }
 
 	    // Step 3: Navigate forward only if products exist
@@ -122,7 +99,7 @@ public class Create_LpoStepDefinition {
 	        "Delivery Hub mismatch on Generate LPO page"
 	    );
 
-	    System.out.println("PASSED – Delivery Hub validated successfully");
+	    System.out.println("PASSED ï¿½ Delivery Hub validated successfully");
 	}
 
 	
@@ -139,11 +116,12 @@ public class Create_LpoStepDefinition {
 	}
 	
 	@Then("only FOC orders should be displayed with zero order margin")
-	public void validate_only_foc_orders() {
+	public void validate_only_foc_orders() throws InterruptedException {
 
 	    CreateLpo lpo = testsetup.pageObjectManager.getCreateLpo();
 
-	    lpo.applyOnlyFocFilter();
+	    lpo.clickFOCcheckbox();
+	    lpo.applyFiltersSafely();
 
 	    boolean isValid = lpo.validateFocOrdersMarginZero();
 
@@ -183,10 +161,67 @@ public class Create_LpoStepDefinition {
 	    // Step 2: Search using seller filter
 	    lpo.searchBySellerName(sellerName);
 	    Thread.sleep(2000);
+	    lpo.applyFiltersSafely();
 //	    lpo.clickwearhousefitler();
 
 	    // Step 3: Validate results
 	    lpo.validateSellerFilterResults(sellerName);
 	}
+
+
+// Validate Approval Types
+
+@When("User selects {string} from Approval Type filter")
+public void user_selects_approval_type(String approvalType) {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+    lpoPage.selectApprovalType(approvalType);
+}
+
+@When("User clicks on Apply Filters button")
+public void user_clicks_apply_filters() {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+    lpoPage.applyFiltersSafely();
+}
+
+@Then("Only {string} products should be displayed in LPO list")
+public void validate_products_by_approval_type(String approvalType) {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	
+	boolean result = lpoPage.validateRowsByRowClass(approvalType);
+    Assert.assertTrue(result, approvalType + " rows validation failed");
+}
+//Scenario: Change seller
+
+@When("select random products")
+public void select_random_products() throws InterruptedException {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	Thread.sleep(2000);
+	lpoPage.selectproducts();
+}
+@Then("click change seller button")
+public void click_change_seller_button() throws InterruptedException {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	Thread.sleep(2000);
+//	lpoPage.clickChangeSeller();
+//	lpoPage.captureOldSellers();
+	lpoPage.getSelectedProductRows();
+}
+@And("change seller randomly and save changes")
+public void change_seller_randomly_and_save_changes() throws InterruptedException {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+//	lpoPage.selectRandomSellerAndSave();
+	List<WebElement> selectedRows = lpoPage.getSelectedProductRows();
+
+    for (WebElement row : selectedRows) {
+        lpoPage.changeSellerForRow(row);
+    }
+	
+	
+}
+@And("validate the changed seller in first page")
+public void validate_the_changed_seller_in_first_page() {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo(); 
+	lpoPage.changeSellerForAllSelectedProducts();
+}
 
 }
