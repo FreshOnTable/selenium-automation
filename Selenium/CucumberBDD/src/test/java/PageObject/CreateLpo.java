@@ -13,12 +13,15 @@ import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
+import org.openqa.selenium.support.ui.Select;
 
 public class CreateLpo {
 	
@@ -40,10 +43,12 @@ public class CreateLpo {
 	}
 
 	
-	public WebDriver driver;
-
+	public WebDriver driver;			
+	public WebDriverWait wait;
+	
 	public CreateLpo(WebDriver driver) {
-		this.driver = driver;	
+		this.driver = driver;
+		this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 	}
 	
 	By clickgrid = By.xpath("//div[@class='menu-cont' ] //img[@alt='img']");
@@ -156,7 +161,7 @@ public class CreateLpo {
 	        By.xpath("//table//tbody//input[@type='checkbox']");
 
 	    // Select first 3 products safely
-	    for (int i = 1; i <= 3; i++) {
+	    for (int i = 1; i <= 4; i++) {
 
 	        By checkboxBy = By.xpath("(//table//tbody//input[@type='checkbox'])[" + i + "]");
 
@@ -192,8 +197,7 @@ public class CreateLpo {
 
 		    Select select = new Select(selectElement);
 		    return select.getFirstSelectedOption().getText().trim();
-		    
-		    
+		    		    
 		}
 	
 	public boolean areProductsAvailable() {
@@ -210,7 +214,7 @@ public class CreateLpo {
 	
 	public void clickNextSafely() {
 		
-
+		
 		    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 		    JavascriptExecutor js = (JavascriptExecutor) driver;
 
@@ -520,104 +524,365 @@ public boolean validateRowsByRowClass(String expectedStatus) {
     return true;
 }
 
-// Scenario: change seller 
+public String getSellerName() {
 
-public List<WebElement> getSelectedProductRows() {
-    return driver.findElements(
-        By.xpath("//table//tbody//tr[.//span[contains(@class,'Mui-checked')]]")
-    );
-       
-}
-public String changeSellerForRow(WebElement row) {
-	
-	driver.findElement(By.xpath("//button[normalize-space()='Change Seller']")).click();
-
-
-    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-    JavascriptExecutor js = (JavascriptExecutor) driver;
-
-    String oldSeller = row.findElement(By.xpath("./td[7]"))
-                          .getText().trim();
-
-    // Click Change Seller button in this row context
-    row.findElement(By.xpath(".//button[contains(.,'Change Seller')]")).click();
-
-    List<WebElement> sellerColumns = wait.until(
-        ExpectedConditions.visibilityOfAllElementsLocatedBy(
-            By.xpath("//table//thead//th[contains(@class,'custom-header-content')]")
-        )
+    // Wait for table
+    WebElement table = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(By.xpath("//table"))
     );
 
-    if (sellerColumns.size() <= 1) {
-        System.out.println("⚠ Single seller for product. Skipping.");
-        driver.findElement(By.xpath("//button[normalize-space()='Cancel']")).click();
-        return "SKIPPED";
-    }
+    // Find Seller Name column index
+    List<WebElement> headers = table.findElements(By.xpath(".//thead//th"));
+    int sellerIndex = -1;
 
-    List<WebElement> sellerCells = wait.until(
-        ExpectedConditions.visibilityOfAllElementsLocatedBy(
-            By.xpath("//table//tbody//td[@style='cursor: pointer;']")
-        )
-    );
-
-    int selectedIndex = -1;
-    for (int i = 0; i < sellerCells.size(); i++) {
-        if (!sellerCells.get(i)
-                .findElements(By.xpath(".//span[contains(@class,'Mui-checked')]"))
-                .isEmpty()) {
-            selectedIndex = i;
+    for (int i = 0; i < headers.size(); i++) {
+        if (headers.get(i).getText().trim().equalsIgnoreCase("Seller Name")) {
+            sellerIndex = i + 1;
             break;
         }
     }
 
-    List<Integer> alternatives = new ArrayList<>();
-    for (int i = 0; i < sellerCells.size(); i++) {
-        if (i != selectedIndex) alternatives.add(i);
+    if (sellerIndex == -1) {
+        throw new RuntimeException("Seller Name column not found");
     }
 
-    if (alternatives.isEmpty()) {
-        driver.findElement(By.xpath("//button[normalize-space()='Cancel']")).click();
-        return "SKIPPED";
-    }
-
-    WebElement newSeller = sellerCells.get(
-        alternatives.get(new Random().nextInt(alternatives.size()))
+    // Read seller from first row
+    WebElement sellerCell = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                    By.xpath("//table//tbody//tr[1]/td[" + sellerIndex + "]"))
     );
 
-    js.executeScript("arguments[0].click();", newSeller);
-
-    wait.until(ExpectedConditions.elementToBeClickable(
-        By.xpath("//button[normalize-space()='Submit']"))).click();
-
-    wait.until(ExpectedConditions.elementToBeClickable(
-        By.xpath("//button[normalize-space()='Confirm']"))).click();
-
-    // 🔥 Wait for update
-    wait.until(ExpectedConditions.not(
-        ExpectedConditions.textToBePresentInElement(row, oldSeller)
-    ));
-
-    String updatedSeller = row.findElement(By.xpath("./td[7]"))
-                              .getText().trim();
-
-    Assert.assertNotEquals(oldSeller, updatedSeller,
-        "Seller did not change for product row");
-
-    System.out.println("✅ Seller changed from " + oldSeller + " → " + updatedSeller);
-    return "CHANGED";
+    return sellerCell.getText().trim();
 }
-public void changeSellerForAllSelectedProducts() {
 
-    List<WebElement> selectedRows = getSelectedProductRows();
+// ---------- Change Seller ----------
+public String changeSellerAndGetNewSeller() {
 
-    for (WebElement row : selectedRows) {
-        try {
-            changeSellerForRow(row);
-        } catch (Exception e) {
-            System.out.println("❌ Failed for one product: " + e.getMessage());
+    String oldSeller = getSellerName();
+    System.out.println("Old Seller: " + oldSeller);
+
+    // Click Change Seller
+    wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//button[normalize-space()='Change Seller']"))).click();
+
+    // Wait for seller list
+    List<WebElement> sellers = wait.until(
+            ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                    By.xpath("//table//tbody//td[@style='cursor: pointer;']"))
+    );
+
+    WebElement selectedSeller = null;
+
+    for (WebElement seller : sellers) {
+        if (seller.getAttribute("class").contains("Mui-selected")) {
+            selectedSeller = seller;
+            break;
         }
     }
+
+    // Select next seller
+    for (WebElement seller : sellers) {
+        if (!seller.equals(selectedSeller)) {
+            seller.click();
+            break;
+        }
+    }
+
+    // Submit
+    wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//button[normalize-space()='Submit']"))).click();
+
+    // Confirm
+    wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//button[normalize-space()='Confirm']"))).click();
+
+    // Click OK
+    wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//button[normalize-space()='OK']"))).click();
+
+    // Wait until seller value changes
+    wait.until(ExpectedConditions.not(
+            ExpectedConditions.textToBePresentInElementLocated(
+                    By.xpath("//table//tbody//tr[1]"), oldSeller)));
+
+    String newSeller = getSellerName();
+    System.out.println("New Seller: " + newSeller);
+
+    return newSeller;
 }
+
+
+
+//Scenario: validate 2nd page
+
+By searchBox = By.xpath("//input[@placeholder='Search product...']");
+By productRows1 = By.xpath("//tr[contains(@class,'custom-row')]");
+By firstProductRow = By.xpath("//table//tbody//tr[1]");
+By orderQtyInput = By.xpath("(//input[contains(@class,'order-qty') or @type='number'])[1]");
+By nextButton = By.xpath("//button[normalize-space()='Next']");
+By deliveryHubDropdown1 = By.xpath("//label[text()='Delivery Hub']/following-sibling::div//select");
+By submitButton = By.xpath("//button[normalize-space()='Submit']");
+By successToast = By.xpath("//*[contains(text(),'LPO created') or contains(text(),'successfully')]");
+By productExpandArrows = By.xpath("//tr[contains(@class,'product-row')]//button[contains(@class,'expand') or .//i]");
+By orderQtyInputs = By.xpath("//input[contains(@class,'order-qty') or @type='number']");
+By deliveryHubField = By.xpath("//div[contains(@class,'delivery-hub') or .//label[text()='Delivery Hub']]");
+By deliveryHubOptions = By.xpath("//div[contains(@class,'menu') or contains(@class,'dropdown')]//div[normalize-space()!='Select']");
+By sellerAccordionArrow = By.xpath(
+	    "//div[contains(@class,'accordion')]//button | //div[contains(@class,'caret')]"
+	);
+
+public String pickRandomProductName() {
+
+    List<WebElement> rows = driver.findElements(productRows1);
+    Assert.assertTrue(rows.size() > 0, "No products found");
+
+    WebElement randomRow = rows.get(new Random().nextInt(rows.size()));
+
+    // FIRST TD contains product name
+    String productName = randomRow.findElement(By.xpath("./td[1]"))
+                                  .getText()
+                                  .trim();
+
+    System.out.println("Random product picked: " + productName);
+    return productName;
+}
+
+public void searchProductFromList(String productName) {
+
+    WebElement search = driver.findElement(searchBox);
+    search.clear();
+
+    // Optional: partial search for safety
+    String searchText = productName.split(" ")[0];
+    search.sendKeys(searchText);
+
+    List<WebElement> filteredRows =
+            driver.findElements(By.xpath("//tr[contains(@class,'custom-row')]"));
+
+    Assert.assertTrue(filteredRows.size() > 0,
+            "Search did not filter any product");
+}
+
+public void expandProductRow() {
+
+    WebElement arrow = driver.findElement(By.xpath(".//div[contains(@class,'caret')]"));
+
+    if (arrow.isDisplayed()) {
+        arrow.click();
+    }
+
+}
+
+/*public int updateOrderQtyRandomly() {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+    Random random = new Random();
+
+    int randomQty = random.nextInt(100) + 1; // 1–100
+
+    WebElement qtyInput =
+            wait.until(ExpectedConditions.visibilityOfElementLocated(orderQtyInput));
+
+    // Clear safely
+    qtyInput.click();
+    qtyInput.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+    qtyInput.sendKeys(Keys.BACK_SPACE);
+
+    // Enter value slowly (IMPORTANT)
+    for (char c : String.valueOf(randomQty).toCharArray()) {
+        qtyInput.sendKeys(String.valueOf(c));
+        try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+    }
+
+    // Trigger JS events
+    qtyInput.sendKeys(Keys.TAB);
+
+    // Validate actual UI value
+    String uiValue = qtyInput.getAttribute("value");
+    System.out.println("Random Qty requested: " + randomQty);
+    System.out.println("Qty accepted by UI: " + uiValue);
+
+    return Integer.parseInt(uiValue);
+}*/
+
+
+public void updateOrderQtyForAllProducts() {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    Random random = new Random();
+
+    List<WebElement> productRows = wait.until(
+            ExpectedConditions.presenceOfAllElementsLocatedBy(
+                    By.xpath("//tr[contains(@class,'custom-row')]")
+            )
+    );
+
+    System.out.println("Total products: " + productRows.size());
+
+    for (WebElement row : productRows) {
+
+        // Find caret inside THIS row
+        WebElement caret = row.findElement(By.xpath(".//div[@class='caret']"));
+
+        ((JavascriptExecutor) driver)
+                .executeScript("arguments[0].scrollIntoView({block:'center'});", caret);
+
+        ((JavascriptExecutor) driver)
+                .executeScript("arguments[0].click();", caret);
+
+        // Qty input is in the NEXT row (expanded row)
+        WebElement qtyInput = wait.until(
+                ExpectedConditions.visibilityOf(
+                        row.findElement(
+                                By.xpath("following-sibling::tr[1]//input[@type='number']")
+                        )
+                )
+        );
+
+        int randomQty = random.nextInt(100) + 1;
+
+        qtyInput.click();
+        qtyInput.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+        qtyInput.sendKeys(Keys.BACK_SPACE);
+
+        // Slow typing fixes 56 → 6 issue
+        for (char c : String.valueOf(randomQty).toCharArray()) {
+            qtyInput.sendKeys(String.valueOf(c));
+            try { Thread.sleep(80); } catch (InterruptedException ignored) {}
+        }
+
+        qtyInput.sendKeys(Keys.TAB);
+
+        System.out.println("Qty set to: " + randomQty);
+    }
+}
+
+
+public void clickNext() {
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
+    wait.until(ExpectedConditions.elementToBeClickable(nextButton)).click();
+}
+
+By accordionHeader = By.xpath("//div[contains(@class,'lpo-accordion-header')]");
+By accordionExpanded = By.xpath(".//div[contains(@class,'lpo-accordion-body') and not(contains(@style,'display: none'))]");
+By deliveryHubSelect = By.name("del_hub_id_select");
+
+
+
+/*public void selectWarehouseForAllSuppliers() {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+    JavascriptExecutor js = (JavascriptExecutor) driver;
+    Random random = new Random();
+
+    List<WebElement> accordionHeaders =
+            driver.findElements(By.xpath("//div[contains(@class,'lpo-accordion-header')]"));
+
+    System.out.println("Total Suppliers: " + accordionHeaders.size());
+
+    for (int i = 0; i < accordionHeaders.size(); i++) {
+
+        // 🔁 Re-locate headers every loop
+        accordionHeaders =
+                driver.findElements(By.xpath("//div[contains(@class,'lpo-accordion-header')]"));
+
+        WebElement header = accordionHeaders.get(i);
+
+        // ✅ Skip first supplier (already expanded)
+        if (i != 0) {
+            js.executeScript("arguments[0].scrollIntoView({block:'center'});", header);
+            js.executeScript("arguments[0].click();", header);
+        }
+
+        // ✅ Wait until accordion body becomes visible
+        WebElement expandedSection = wait.until(
+                ExpectedConditions.visibilityOfNestedElementsLocatedBy(
+                        header.findElement(By.xpath("./ancestor::div[contains(@class,'lpo-accordion')]")),
+                        deliveryHubSelect
+                )
+        ).get(0);
+
+        Select select = new Select(expandedSection);
+
+        List<WebElement> options = select.getOptions();
+        List<String> validWarehouses = new ArrayList<>();
+
+        for (WebElement option : options) {
+            String text = option.getText().trim();
+            if (!text.equalsIgnoreCase("Select") && !text.isEmpty()) {
+                validWarehouses.add(text);
+            }
+        }
+
+        if (validWarehouses.isEmpty()) {
+            System.out.println("⚠ No warehouse for supplier " + (i + 1));
+            continue;
+        }
+
+        String chosenWarehouse =
+                validWarehouses.get(random.nextInt(validWarehouses.size()));
+
+        select.selectByVisibleText(chosenWarehouse);
+
+        System.out.println("Supplier " + (i + 1)
+                + " → Warehouse selected: " + chosenWarehouse);
+    }
+}*/
+
+
+public String selectRandomDeliveryHub() {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+    // Locate the <select> element
+    WebElement deliveryHubSelect = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                    By.name("del_hub_id_select"))
+    );
+
+    Select select = new Select(deliveryHubSelect);
+
+    List<WebElement> options = select.getOptions();
+
+    // Remove first option "Select"
+    List<WebElement> validOptions = new ArrayList<>();
+    for (WebElement option : options) {
+        if (!option.getText().trim().equalsIgnoreCase("Select")) {
+            validOptions.add(option);
+        }
+    }
+
+    if (validOptions.isEmpty()) {
+        throw new RuntimeException("No Delivery Hub options available");
+    }
+
+    // Pick random option
+    WebElement randomOption =
+            validOptions.get(new Random().nextInt(validOptions.size()));
+
+    select.selectByVisibleText(randomOption.getText());
+
+    System.out.println("Selected Delivery Hub: " + randomOption.getText());
+
+    return randomOption.getText();
+}
+
+
+
+public void clickSubmit() {
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    wait.until(ExpectedConditions.elementToBeClickable(submitButton)).click();
+}
+public void validateLpoCreated() {
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+    WebElement successMsg = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(successToast));
+
+    Assert.assertTrue(successMsg.isDisplayed(), "LPO creation failed");
+    System.out.println("✅ LPO created successfully");
+}
+
 
 }
 

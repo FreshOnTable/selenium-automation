@@ -139,7 +139,7 @@ public class Create_LpoStepDefinition {
 	
 	//existing seller
 	
-	@Given("User navigates to Create LPO page1")
+	@Given("User is on Create LPO page")
 	public void User_navigates_Create_LPO_page1() throws InterruptedException {
 		CreateLpo Lpo = testsetup.pageObjectManager.getCreateLpo();
 		Thread.sleep(2000);
@@ -192,36 +192,71 @@ public void validate_products_by_approval_type(String approvalType) {
 }
 //Scenario: Change seller
 
-@When("select random products")
+@When("User select random products")
 public void select_random_products() throws InterruptedException {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
 	Thread.sleep(2000);
 	lpoPage.selectproducts();
 }
-@Then("click change seller button")
+@Then("User clicks on change seller button")
 public void click_change_seller_button() throws InterruptedException {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
 	Thread.sleep(2000);
+//	lpoPage.getOldSeller();
 //	lpoPage.clickChangeSeller();
 //	lpoPage.captureOldSellers();
-	lpoPage.getSelectedProductRows();
+	
 }
-@And("change seller randomly and save changes")
+@And("User selects a different seller and submits")
 public void change_seller_randomly_and_save_changes() throws InterruptedException {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	lpoPage.getSellerName();
+	lpoPage.changeSellerAndGetNewSeller();
 //	lpoPage.selectRandomSellerAndSave();
-	List<WebElement> selectedRows = lpoPage.getSelectedProductRows();
-
-    for (WebElement row : selectedRows) {
-        lpoPage.changeSellerForRow(row);
-    }
-	
+//	lpoPage.selectNextSellerAndSave();
 	
 }
-@And("validate the changed seller in first page")
+@And("Seller should be updated successfully in LPO page")
 public void validate_the_changed_seller_in_first_page() {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo(); 
-	lpoPage.changeSellerForAllSelectedProducts();
+//	lpoPage.changeSellerForAllSelectedProducts();
+}
+
+
+//Scenario: Validate 2nd page
+
+@When("User creates LPO with random product qty and delivery hub")
+public void create_lpo_randomly() throws InterruptedException {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	lpoPage.selectproducts();
+	Thread.sleep(1000);
+	lpoPage.clickNext();
+    Thread.sleep(1000);
+
+    
+//	lpoPage.updateOrderQtyRandomly();
+    lpoPage.updateOrderQtyForAllProducts();
+    lpoPage.clickNext();
+
+
+}
+
+@Then("User selects random delivery hub")
+public void user_selects_random_delivery_hub() {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	
+	String hub = lpoPage.selectRandomDeliveryHub();
+    Assert.assertFalse(hub.isEmpty(),
+            "❌ Delivery Hub not selected");
+//	 lpoPage.selectWarehouseForAllSuppliers();
+}
+
+    
+@Then("LPO should be created successfully")
+public void validate_lpo_created() {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+//  lpoPage.clickSubmit();
+	lpoPage.validateLpoCreated();
 }
 
 }

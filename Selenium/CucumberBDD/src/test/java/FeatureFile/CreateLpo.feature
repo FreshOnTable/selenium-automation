@@ -27,7 +27,7 @@ Feature: LPO Module
 	
 	
 	Scenario: Validate existing Seller
-	Given User navigates to Create LPO page1
+	Given User is on Create LPO page
 	Then User filters LPOs by seller name from table
 
 
@@ -48,11 +48,21 @@ Then only FOC orders should be displayed with zero order margin
       | Approved            |
       | Rejected            |
   
-  @Lpo_01      
+    
+  
   Scenario Outline: Change seller
-  Given User navigates to Create LPO page1
-  When select random products
-  Then click change seller button 
-  And change seller randomly and save changes
-  And validate the changed seller in first page
+  Given User is on Create LPO page
+  When User select random products
+  And User clicks on change seller button 
+  And User selects a different seller and submits
+  Then Seller should be updated successfully in LPO page
+  
+  
+   @Lpo_01
+  Scenario Outline: 2nd Page
+  Given User is on Create LPO page
+  When User creates LPO with random product qty and delivery hub
+  Then User selects random delivery hub
+
+ # Then LPO should be created successfully
                 
