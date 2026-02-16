@@ -63,6 +63,5 @@ Then only FOC orders should be displayed with zero order margin
   Given User is on Create LPO page
   When User creates LPO with random product qty and delivery hub
   Then User selects random delivery hub
-
- # Then LPO should be created successfully
+  Then LPO should be created successfully
                 

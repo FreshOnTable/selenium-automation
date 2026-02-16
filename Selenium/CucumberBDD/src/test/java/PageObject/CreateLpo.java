@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -161,7 +162,7 @@ public class CreateLpo {
 	        By.xpath("//table//tbody//input[@type='checkbox']");
 
 	    // Select first 3 products safely
-	    for (int i = 1; i <= 4; i++) {
+	    for (int i = 1; i <= 2; i++) {
 
 	        By checkboxBy = By.xpath("(//table//tbody//input[@type='checkbox'])[" + i + "]");
 
@@ -621,7 +622,9 @@ By firstProductRow = By.xpath("//table//tbody//tr[1]");
 By orderQtyInput = By.xpath("(//input[contains(@class,'order-qty') or @type='number'])[1]");
 By nextButton = By.xpath("//button[normalize-space()='Next']");
 By deliveryHubDropdown1 = By.xpath("//label[text()='Delivery Hub']/following-sibling::div//select");
-By submitButton = By.xpath("//button[normalize-space()='Submit']");
+By submitButton = By.xpath("//button[normalize-space()='SUBMIT']");
+By confirmButton = By.xpath("//button[normalize-space()='Confirm']");
+By NoBtn = By.xpath("//button[normalize-space()='No']");
 By successToast = By.xpath("//*[contains(text(),'LPO created') or contains(text(),'successfully')]");
 By productExpandArrows = By.xpath("//tr[contains(@class,'product-row')]//button[contains(@class,'expand') or .//i]");
 By orderQtyInputs = By.xpath("//input[contains(@class,'order-qty') or @type='number']");
@@ -767,121 +770,126 @@ By accordionHeader = By.xpath("//div[contains(@class,'lpo-accordion-header')]");
 By accordionExpanded = By.xpath(".//div[contains(@class,'lpo-accordion-body') and not(contains(@style,'display: none'))]");
 By deliveryHubSelect = By.name("del_hub_id_select");
 
+	
+/*public void selectRandomDeliveryHub() {
 
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-/*public void selectWarehouseForAllSuppliers() {
+    // Locate dropdown
+    WebElement deliveryHubDropdown = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    By.name("del_hub_id_select")
+            )
+    );
+
+    // Click dropdown (important for UI validation)
+    deliveryHubDropdown.click();
+
+    Select select = new Select(deliveryHubDropdown);
+    List<WebElement> options = select.getOptions();
+
+    // Ignore first two options: "Delivery Hub" and "Select"
+    if (options.size() <= 2) {
+        throw new RuntimeException("No valid Delivery Hub options available");
+    }
+
+    // Pick random index from valid options
+    int randomIndex = new Random().nextInt(options.size() - 2) + 2;
+
+    // Select option
+    select.selectByIndex(randomIndex);
+
+    System.out.println(
+        "Random Delivery Hub selected: " + options.get(randomIndex).getText()
+    );
+}*/
+
+public void selectRandomDeliveryHub() {
 
     WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     JavascriptExecutor js = (JavascriptExecutor) driver;
     Random random = new Random();
 
-    List<WebElement> accordionHeaders =
-            driver.findElements(By.xpath("//div[contains(@class,'lpo-accordion-header')]"));
+    int lpoCount = driver.findElements(
+            By.xpath("//div[contains(@class,'lpo-accordion')]")
+    ).size();
 
-    System.out.println("Total Suppliers: " + accordionHeaders.size());
+    System.out.println("Total LPOs found: " + lpoCount);
 
-    for (int i = 0; i < accordionHeaders.size(); i++) {
+    for (int i = 0; i < lpoCount; i++) {
 
-        // 🔁 Re-locate headers every loop
-        accordionHeaders =
-                driver.findElements(By.xpath("//div[contains(@class,'lpo-accordion-header')]"));
+        WebElement accordion = driver.findElements(
+                By.xpath("//div[contains(@class,'lpo-accordion')]")
+        ).get(i);
 
-        WebElement header = accordionHeaders.get(i);
+        js.executeScript(
+                "arguments[0].scrollIntoView({block:'center'});" +
+                "window.scrollBy(0,-120);",
+                accordion
+        );
 
-        // ✅ Skip first supplier (already expanded)
-        if (i != 0) {
-            js.executeScript("arguments[0].scrollIntoView({block:'center'});", header);
-            js.executeScript("arguments[0].click();", header);
+        if (i > 0) {
+            WebElement accordionHeader = accordion.findElement(
+                    By.xpath(".//div[contains(@class,'accordion-top')]")
+            );
+
+            js.executeScript("arguments[0].click();", accordionHeader);
         }
 
-        // ✅ Wait until accordion body becomes visible
-        WebElement expandedSection = wait.until(
-                ExpectedConditions.visibilityOfNestedElementsLocatedBy(
-                        header.findElement(By.xpath("./ancestor::div[contains(@class,'lpo-accordion')]")),
-                        deliveryHubSelect
+        WebElement deliveryHubDropdown = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("(//div[contains(@class,'lpo-accordion')])[" + (i + 1) + "]//select[@name='del_hub_id_select']")
                 )
-        ).get(0);
+        );
 
-        Select select = new Select(expandedSection);
+        deliveryHubDropdown.click();
 
+        Select select = new Select(deliveryHubDropdown);
         List<WebElement> options = select.getOptions();
-        List<String> validWarehouses = new ArrayList<>();
 
-        for (WebElement option : options) {
-            String text = option.getText().trim();
-            if (!text.equalsIgnoreCase("Select") && !text.isEmpty()) {
-                validWarehouses.add(text);
-            }
+        if (options.size() <= 2) {
+            throw new RuntimeException("No valid Delivery Hub options in LPO " + (i + 1));
         }
 
-        if (validWarehouses.isEmpty()) {
-            System.out.println("⚠ No warehouse for supplier " + (i + 1));
-            continue;
-        }
+        int randomIndex = random.nextInt(options.size() - 2) + 2;
+        select.selectByIndex(randomIndex);
 
-        String chosenWarehouse =
-                validWarehouses.get(random.nextInt(validWarehouses.size()));
+        System.out.println(
+                "LPO " + (i + 1) + " → Selected Delivery Hub: " +
+                select.getFirstSelectedOption().getText()
+        );
 
-        select.selectByVisibleText(chosenWarehouse);
-
-        System.out.println("Supplier " + (i + 1)
-                + " → Warehouse selected: " + chosenWarehouse);
     }
-}*/
-
-
-public String selectRandomDeliveryHub() {
-
-    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-
-    // Locate the <select> element
-    WebElement deliveryHubSelect = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(
-                    By.name("del_hub_id_select"))
-    );
-
-    Select select = new Select(deliveryHubSelect);
-
-    List<WebElement> options = select.getOptions();
-
-    // Remove first option "Select"
-    List<WebElement> validOptions = new ArrayList<>();
-    for (WebElement option : options) {
-        if (!option.getText().trim().equalsIgnoreCase("Select")) {
-            validOptions.add(option);
-        }
-    }
-
-    if (validOptions.isEmpty()) {
-        throw new RuntimeException("No Delivery Hub options available");
-    }
-
-    // Pick random option
-    WebElement randomOption =
-            validOptions.get(new Random().nextInt(validOptions.size()));
-
-    select.selectByVisibleText(randomOption.getText());
-
-    System.out.println("Selected Delivery Hub: " + randomOption.getText());
-
-    return randomOption.getText();
 }
-
-
 
 public void clickSubmit() {
-    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-    wait.until(ExpectedConditions.elementToBeClickable(submitButton)).click();
+	WebElement submitBtn = driver.findElement(submitButton);
+	submitBtn.click();
+}
+
+public void clickConfirmBtn() {
+	WebElement submitBtn = driver.findElement(confirmButton);
+	submitBtn.click();
+}
+public void clickNoBtn() {
+	WebElement submitBtn = driver.findElement(NoBtn);
+	submitBtn.click();
 }
 public void validateLpoCreated() {
-    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
-    WebElement successMsg = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(successToast));
+	    By successMsgLocator = By.xpath("//div[contains(text(),'Waiting For Acceptance')]");
 
-    Assert.assertTrue(successMsg.isDisplayed(), "LPO creation failed");
-    System.out.println("✅ LPO created successfully");
-}
+	    WebElement successMsg = wait.until(
+	            ExpectedConditions.visibilityOfElementLocated(successMsgLocator)
+	    );
+
+	    String expected = "Waiting For Acceptance";
+	    String actual = successMsg.getText().trim();
+
+	    Assert.assertEquals(actual, expected, "❌ Expected and Actual messages do not match");
+
+	    System.out.println("✅ Test case passed – LPO created successfully");
+	}
 
 
 }

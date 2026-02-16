@@ -245,17 +245,21 @@ public void create_lpo_randomly() throws InterruptedException {
 public void user_selects_random_delivery_hub() {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
 	
-	String hub = lpoPage.selectRandomDeliveryHub();
-    Assert.assertFalse(hub.isEmpty(),
-            "❌ Delivery Hub not selected");
-//	 lpoPage.selectWarehouseForAllSuppliers();
+	lpoPage.selectRandomDeliveryHub();
+   
 }
 
     
 @Then("LPO should be created successfully")
-public void validate_lpo_created() {
+public void validate_lpo_created() throws InterruptedException {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
-//  lpoPage.clickSubmit();
+	Thread.sleep(1000);
+    lpoPage.clickSubmit();
+    Thread.sleep(1000);
+    lpoPage.clickConfirmBtn();
+    Thread.sleep(1000);
+    lpoPage.clickNoBtn();
+    Thread.sleep(1000);
 	lpoPage.validateLpoCreated();
 }
 
