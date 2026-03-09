@@ -56,8 +56,7 @@ public class Placeorder {
 	}
 	
 	public void selectBusiness() {
-	//	driver.findElement(By.xpath("//div[2]/div/div[2]/div[2]/table/tbody/tr[5]")).click();
-		driver.findElement(By.xpath("//table//tbody//tr[5]")).click();
+		driver.findElement(By.xpath("//div[2]/div/div[2]/div[2]/table/tbody/tr[5]")).click();
 		
 	}
 
@@ -67,7 +66,7 @@ public class Placeorder {
 		List<WebElement> products = driver.findElements(
 				By.xpath("//input[contains(@class,'grid-checkbox-input') and @type='checkbox' and not(@disabled)]"));
 
-	    int numberOfProductsToSelect = 3;
+	    int numberOfProductsToSelect = 2;
 	    Set<Integer> randomIndexes = new HashSet<>();
 
 	    int maxSelectable = Math.min(numberOfProductsToSelect, products.size());
@@ -89,24 +88,18 @@ public class Placeorder {
 
 	        WebElement checkbox = products.get(index);
 
-	      try {  WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-	        wait.until(ExpectedConditions.visibilityOf(checkbox));
-
-	        ((JavascriptExecutor) driver).executeScript(
-	                "arguments[0].scrollIntoView({block: 'nearest'});",
-	                checkbox
-	        );
-
-	        Thread.sleep(500);
-
-	        wait.until(ExpectedConditions.elementToBeClickable(checkbox)).click();
+	        // Wait until clickable
+	        try {
+	            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	            wait.until(ExpectedConditions.elementToBeClickable(checkbox));
+	            checkbox.click();
 	        } catch (Exception e) {
 	            // Fallback to JS click
 	            js.executeScript("arguments[0].click();", checkbox);
 	        }
 
 	        // Short delay for row to become interactive
-	        Thread.sleep(1000);
+	        Thread.sleep(200);
 
 	        // Find row and quantity input
 	        WebElement row = checkbox.findElement(By.xpath("./ancestor::tr"));
@@ -319,20 +312,10 @@ public class Placeorder {
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".react-confirm-alert-body")));
 
 		String popupText = driver.findElement(By.cssSelector(".react-confirm-alert-body")).getText();
+		System.out.println("Popup text: " + popupText);
 
-		// 🔹 Trim text till "successfully."
-		int index = popupText.indexOf("successfully.");
-
-		String trimmedText = popupText.substring(0, index + "successfully.".length());
-
-		System.out.println("POP UP: " + trimmedText);
-
-
-		// 🔹 Extract Order ID inside [ ]
 		Pattern pattern = Pattern.compile("\\[\\s*(\\d+)\\s*\\]");
 		Matcher matcher = pattern.matcher(popupText);
-
-		
 
 		String orderId = "";
 

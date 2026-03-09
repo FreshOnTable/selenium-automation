@@ -1,5 +1,5 @@
 
-@Regression
+@RegressionTesting
 
 Feature: End to End order Process
 
@@ -90,4 +90,10 @@ And User validates all products one by one
   #Then User select the order and enters the Amount,Transaction id and comments
   #And Order is updated to "Completed" status successfully
     #
+@Regression1 
+   Scenario: Receiving zero qty with validating debit note and rejection note
+   Given User navigates to the Create LPO page
+   Then User changes any 1 LPO to the "Awaiting for Acceptance" status1
+   When User completes LPO with zero received qty
+   And User changes any 1 LPO to the "Partially Fulfilled And Awaiting For Approval" Lpo status
     #

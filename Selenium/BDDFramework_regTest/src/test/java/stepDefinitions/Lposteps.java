@@ -2,6 +2,7 @@ package stepDefinitions;
 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import pageObject.Lpopage;
 import utilities.BaseClass;
 
@@ -32,7 +33,7 @@ public class Lposteps {
 		Thread.sleep(2000);
 		Lpo.wearhousedropdown();
 		Thread.sleep(2000);
-		Lpo.selectwearouse();
+		Lpo.applyFiltersSafely();
 		Thread.sleep(2000);
 		Lpo.selectproducts();
 	}
@@ -67,7 +68,7 @@ public class Lposteps {
 		Lpopage Lpo = setupclass.pageObjectManager.getLpopage();
 		Thread.sleep(2000);
 //		Lpo.CreateLpoValidation();
-		Thread.sleep(2000);
+		
 	}
 
 	@Then("User changes any {int} LPOs to the {string} status")
@@ -100,4 +101,42 @@ public class Lposteps {
 	public void the_lpo_is_completed_successfully() {
 
 	}
+	
+	@Then("User changes any {int} LPO to the {string} status1")
+	public void User_changes_any_lp_os_to_the_status1(int count, String string) throws InterruptedException {
+		Lpopage Lpo = setupclass.pageObjectManager.getLpopage();
+		Thread.sleep(3000);
+		Lpo.searchSeller();
+		Thread.sleep(3000);
+		Lpo.selectAllProducts();
+		Thread.sleep(1000);
+		Lpo.clicknextbutton();
+		Thread.sleep(1000);
+		Lpo.clicknextbutton();
+		Thread.sleep(2000);
+		Lpo.selectRandomDeliveryHub();
+		Lpo.clicksubmittbutton();
+		Thread.sleep(1000);
+		Lpo.ClickConfirmButton();
+		Thread.sleep(1000);
+		Lpo.clickNoButton();
+		Thread.sleep(3000);
+		Lpo.processTopWaitingForAcceptanceLpos1(count);
+	}
+	
+	@When("User completes LPO with zero received qty")
+	public void user_completes_lpo_with_received_qty_zero() throws InterruptedException {
+		Lpopage Lpo = setupclass.pageObjectManager.getLpopage();
+		
+		Lpo.receiveProductQtyzeroAndVeryfyDN();
+		Thread.sleep(2000);
+		
+	}
+	
+	@Then("User changes any {int} LPO to the {string} Lpo status")
+	public void User_changes_any_lp_os_to_the_Lpo_status(int count, String string) throws InterruptedException {
+		Lpopage Lpo = setupclass.pageObjectManager.getLpopage();
+		
+		Lpo.processTopPartiallyFulfilledAndAwaitingForApproval_status(count);
+}
 }
