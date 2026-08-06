@@ -225,6 +225,8 @@ public void change_seller_randomly_and_save_changes() throws InterruptedExceptio
 	//lpoPage.changeSellerAndGetNewSeller();
 	//lpoPage.changeMultipleSellers();
 	lpoPage.changeSellerForAllProducts();
+	Thread.sleep(2000);
+	lpoPage.submitActions();
 //	lpoPage.selectRandomSellerAndSave();
 //	lpoPage.selectNextSellerAndSave();
 	
@@ -556,10 +558,13 @@ public void confirm_the_approval_request_sent() {
 
 // LPO stock entry validation
 @When("User changes any {int} LPO to the {string} status for completing LPO")
-public void user_changes_any_lpo_to_the_status_for_completing_lpo(int count, String string,String value) throws InterruptedException {
+public void user_changes_any_lpo_to_the_status_for_completing_lpo(
+        int count, String value) throws InterruptedException {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
 	Thread.sleep(1000);
-	lpoPage.selectOnlyApprovedProducts(1);
+	lpoPage.selectAllproducts();
+//	lpoPage.selectproducts();
+//	lpoPage.selectOnlyApprovedProducts(2);
 	Thread.sleep(1000);
 	lpoPage.clickNext();
     Thread.sleep(1000);

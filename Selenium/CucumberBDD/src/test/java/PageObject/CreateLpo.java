@@ -400,7 +400,7 @@ public class CreateLpo {
 	
 	public void selectAllproducts() throws InterruptedException {
 		
-//		Thread.sleep(500);
+		Thread.sleep(500);
 		WebElement selectAll = driver.findElement(By.xpath("//table//thead//input[@type='checkbox']"));
 		selectAll.click();
 		
@@ -1233,9 +1233,10 @@ public boolean validateRowsByRowClass(String expectedStatus) {
 //            "✅ Multiple seller changes submitted successfully."
 //    );
 //}
+
 public void changeSellerForAllProducts() throws InterruptedException {
 
-    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     JavascriptExecutor js = (JavascriptExecutor) driver;
     Random random = new Random();
 
@@ -1245,99 +1246,75 @@ public void changeSellerForAllProducts() throws InterruptedException {
 
     List<String> changeDetails = new ArrayList<>();
 
-    // =========================================================
-    // 1. Click Change Seller
-    // =========================================================
-
-    wait.until(ExpectedConditions.elementToBeClickable(
-            By.xpath("//button[normalize-space()='Change Seller']")))
-            .click();
-
-    Thread.sleep(1000);
-
-    // =========================================================
-    // 2. Find ALL product accordion headers
-    // =========================================================
     
-//    List<WebElement> products = driver.findElements(
-//            By.xpath(
-//                    "//div[contains(@class,'accordion') or " +
-//                    "contains(@class,'MuiAccordion-root')]"
-//            )
-//    );
-    List<WebElement> products = driver.findElements(
-            By.xpath(
-                    ".//div[contains(@class,'oneline-row') and contains(@class,'j-space-between')]"
+    // 1. CLICK CHANGE SELLER
+    // =========================================================
+
+    WebElement changeSellerBtn = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    By.xpath("//button[normalize-space()='Change Seller']")
             )
     );
 
-    /*
-     * If your application does not have accordion class,
-     * use the product sections based on Total Qty.
-     */
+    js.executeScript(
+            "arguments[0].scrollIntoView({block:'center'});",
+            changeSellerBtn
+    );
+
+    Thread.sleep(700);
+
+    changeSellerBtn.click();
+
+    Thread.sleep(2000);
+
     
-//    if (products.isEmpty()) {
-//
-//        products = driver.findElements(
-//                By.xpath(
-//                        "//*[contains(normalize-space(),'Total Qty')]" +
-//                        "/ancestor::*[.//*[contains(normalize-space(),'Total CP')]][1]"
-//                )
-//        );
-//    }
+    // 2. PRODUCT ACCORDION XPATH
 
-    totalProducts = products.size();
+    String productAccordionXpath =
+            "//div[contains(@class,'MuiAccordion-root')]"
+          + "//div[contains(@class,'MuiAccordionSummary-root')]"
+          + "[.//div[contains(@class,'product-name')]]";
 
-    System.out.println("==============================================");
+    List<WebElement> productHeaders =
+            driver.findElements(By.xpath(productAccordionXpath));
+
+    totalProducts = productHeaders.size();
+
+    
     System.out.println("TOTAL PRODUCTS FOUND : " + totalProducts);
-    System.out.println("==============================================");
 
-    // =========================================================
-    // 3. Process every product
-    // =========================================================
-
+   
+    // 3. PROCESS EVERY PRODUCT
+   
     for (int i = 0; i < totalProducts; i++) {
 
         try {
 
-            // Re-find products every iteration
-        	products = driver.findElements(
-        	        By.xpath(
-        	                ".//div[contains(@class,'oneline-row') and contains(@class,'j-space-between')]"
-        	        )
-        	);
-
-//            if (products.isEmpty()) {
-//                products = driver.findElements(
-//                        By.xpath(
-//                                "//*[contains(normalize-space(),'Total Qty')]" +
-//                                "/ancestor::*[.//*[contains(normalize-space(),'Total CP')]][1]"
-//                        )
-//                );
-//            }
-
-            if (i >= products.size()) {
-                break;
-            }
-
-            WebElement product = products.get(i);
-
-            js.executeScript(
-                    "arguments[0].scrollIntoView({block:'center'});",
-                    product
+            productHeaders = driver.findElements(
+                    By.xpath(productAccordionXpath)
             );
 
-            Thread.sleep(500);
+            if (i >= productHeaders.size()) {
+
+                System.out.println(
+                        "⚠ Product index not available : " + i
+                );
+
+                skippedProducts++;
+                continue;
+            }
+
+            WebElement productHeader = productHeaders.get(i);
 
             // =================================================
-            // Product name
+            // PRODUCT NAME
             // =================================================
 
-            String productName = "";
+            String productName;
 
             try {
 
-                productName = product.findElement(
+                productName = productHeader.findElement(
                         By.xpath(
                                 ".//div[contains(@class,'product-name')]"
                         )
@@ -1348,159 +1325,268 @@ public void changeSellerForAllProducts() throws InterruptedException {
                 productName = "Product " + (i + 1);
             }
 
-            System.out.println("----------------------------------------------");
             System.out.println(
-                    "Processing Product " + (i + 1) +
-                    " : " + productName
+                    "----------------------------------------------"
+            );        
+            System.out.println(
+                    "PRODUCT " +
+                    (i + 1)                  
+            );
+            // =================================================
+            // SCROLL PRODUCT
+            // =================================================
+
+            js.executeScript(
+                    "arguments[0].scrollIntoView({block:'center'});",
+                    productHeader
             );
 
+            Thread.sleep(500);
+
             // =================================================
-            // 4. Find accordion toggle
+            // GET ACCORDION ROOT
             // =================================================
 
-            String expanded = product.getAttribute("aria-expanded");
+            WebElement accordionRoot =
+                    productHeader.findElement(
+                            By.xpath(
+                                    "./ancestor::div[contains(@class,'MuiAccordion-root')][1]"
+                            )
+                    );
 
-            System.out.println("Product: " + productName);
-            System.out.println("Expanded: " + expanded);
+            // =================================================
+            // CHECK ACCORDION
+            // =================================================
+
+            String expanded =
+                    productHeader.getAttribute("aria-expanded");
 
             if ("false".equalsIgnoreCase(expanded)) {
 
-                WebElement toggle = product.findElement(
-                        By.xpath(".//div[contains(@class,'MuiAccordionSummary-expandIconWrapper')]")
-                );
+                WebElement toggle =
+                        productHeader.findElement(
+                                By.xpath(
+                                        ".//div[contains(@class,'MuiAccordionSummary-expandIconWrapper')]"
+                                )
+                        );
 
                 js.executeScript(
                         "arguments[0].scrollIntoView({block:'center'});",
                         toggle
                 );
 
-                Thread.sleep(300);
+                Thread.sleep(500);
 
-                js.executeScript(
-                        "arguments[0].click();",
-                        toggle
-                );
+                toggle.click();
 
-                wait.until(ExpectedConditions.attributeToBe(
-                		product,
-                        "aria-expanded",
-                        "true"
-                ));
-
-                System.out.println("✅ Expanded: " + productName);
-
-            } else {
-
-                System.out.println("Already expanded: " + productName);
+                Thread.sleep(1200);
             }
 
             // =================================================
-            // 5. Find seller cells INSIDE current product
+            // FIND SELLER TABLE
             // =================================================
 
-//            List<WebElement> sellers = product.findElements(
-//                    By.xpath(
-//                            ".//td[@style='cursor: pointer;']"
-//                    )
-//            );
+            WebElement sellerTable;
 
-//            System.out.println(
-//                    "Sellers available for product: "
-//                            + sellers.size()
-//            );
-//
-//            // Need at least 2 sellers to change seller
-//            if (sellers.size() < 2) {
-//
-//                System.out.println(
-//                        "⚠ Less than 2 sellers. Skipping: "
-//                                + productName
-//                );
-//
-//                skippedProducts++;
-//                continue;
-//            }
-            List<WebElement> sellerRows = product.findElements(
-                    By.xpath(
-                            "./following-sibling::tr[td[@style='cursor: pointer;']]"
-                    )
-            );
+            try {
 
-            List<WebElement> sellers = new ArrayList<>();
+                sellerTable =
+                        accordionRoot.findElement(
+                                By.xpath(".//table")
+                        );
 
-            for (WebElement sellerRow : sellerRows) {
+            } catch (Exception e) {
 
-                List<WebElement> sellerCells = sellerRow.findElements(
-                        By.xpath(".//td[@style='cursor: pointer;']")
+                System.out.println(
+                        "⚠ Seller table not found : " +
+                        productName
                 );
 
-                if (!sellerCells.isEmpty()) {
-                    sellers.add(sellerCells.get(0));
-                }
+                skippedProducts++;
+                continue;
             }
 
             // =================================================
-            // 6. Find OLD / currently selected seller
+            // GET SELLER HEADERS
             // =================================================
 
-            WebElement oldSellerElement = null;
+            List<WebElement> sellerHeaders =
+                    sellerTable.findElements(
+                            By.xpath(".//thead/tr/th")
+                    );
+
+            int sellerCount =
+                    sellerHeaders.size() - 1;
+
+            // =================================================
+            // NEED AT LEAST 2 SELLERS
+            // =================================================
+
+            if (sellerCount < 2) {
+
+                System.out.println(
+                        "⚠ Olny 1 sellers available for this product : " +
+                        productName
+                );
+
+                skippedProducts++;
+                continue;
+            }
+
+            // =================================================
+            // PRINT ALL SELLERS
+            // =================================================
+
+            for (int j = 1; j < sellerHeaders.size(); j++) {
+
+                String sellerName =
+                        sellerHeaders.get(j)
+                                .getText()
+                                .replaceAll("\\s+", " ")
+                                .trim();
+
+ //               System.out.println(
+ //                       "SELLER[" + j + "] : " +
+ //                       sellerName
+ //               );
+            }
+
+            // =================================================
+            // GET FIRST DATA ROW
+            // =================================================
+
+            WebElement firstRow =
+                    sellerTable.findElement(
+                            By.xpath(".//tbody/tr[1]")
+                    );
+
+            List<WebElement> cells =
+                    firstRow.findElements(
+                            By.xpath("./th | ./td")
+                    );
+
+            if (cells.size() < 2) {
+
+                System.out.println(
+                        "⚠ Seller cells not found"
+                );
+
+                skippedProducts++;
+                continue;
+            }
+
+            // =================================================
+            // IMPORTANT
+            //
+            // FIND ACTUAL OLD SELLER USING QUANTITY
+            //
+            // The selected checkbox itself is not reliable.
+            // The actual seller is the seller column where
+            // quantity exists.
+            // =================================================
+
+            int oldSellerIndex = -1;
             String oldSeller = "";
+            String oldQuantity = "";
 
-            for (WebElement seller : sellers) {
+            for (int j = 1;
+                 j < cells.size() && j < sellerHeaders.size();
+                 j++) {
 
-                String className = seller.getAttribute("class");
+                WebElement cell = cells.get(j);
 
-                if (className != null &&
-                        className.contains("Mui-selected")) {
+                String cellText =
+                        cell.getText()
+                                .replaceAll("\\s+", " ")
+                                .trim();
 
-                    oldSellerElement = seller;
+                String sellerName =
+                        sellerHeaders.get(j)
+                                .getText()
+                                .replaceAll("\\s+", " ")
+                                .trim();
 
-                    oldSeller = seller.getText()
-                            .replaceAll("\\s+", " ")
-                            .trim();
+//                System.out.println(
+//                        "SELLER[" + j + "] = " +
+//                        sellerName +
+//                        " | CELL = " +
+//                        cellText
+//                );
+
+                // -------------------------------------------------
+                // IMPORTANT:
+                // Ignore empty cells and Total row.
+                // A real seller cell contains quantity such as:
+                //
+                // 0.01 (Kg)
+                // 3.01 (Pieces)
+                // 12.03 (Kg)
+                // -------------------------------------------------
+
+                if (!cellText.isEmpty()
+                        && cellText.matches(
+                                ".*\\d+(\\.\\d+)?\\s*\\(.*\\).*"
+                        )) {
+
+                    oldSellerIndex = j;
+                    oldSeller = sellerName;
+                    oldQuantity = cellText;
 
                     break;
                 }
             }
 
             // =================================================
-            // 7. If selected seller not found
+            // OLD SELLER NOT FOUND
             // =================================================
 
-            if (oldSellerElement == null) {
+            if (oldSellerIndex == -1) {
 
                 System.out.println(
-                        "⚠ Current seller not identified for: "
-                                + productName
+                        "❌ Actual old seller could not be found"
                 );
 
                 skippedProducts++;
                 continue;
             }
 
-            System.out.println(
-                    "Old Seller : " + oldSeller
-            );
-
             // =================================================
-            // 8. Find other sellers
+            // FIND RANDOM NEW SELLER
+            //
+            // IMPORTANT:
+            // Do NOT select old seller.
+            // Select any random seller from the remaining
+            // seller columns.
             // =================================================
 
-            List<WebElement> availableNewSellers =
+            List<Integer> availableSellerIndexes =
                     new ArrayList<>();
 
-            for (WebElement seller : sellers) {
+            for (int j = 1;
+                 j < sellerHeaders.size() && j < cells.size();
+                 j++) {
 
-                if (!seller.equals(oldSellerElement)) {
+                // Skip OLD seller
+                if (j == oldSellerIndex) {
+                    continue;
+                }
 
-                    availableNewSellers.add(seller);
+                String sellerName =
+                        sellerHeaders.get(j)
+                                .getText()
+                                .replaceAll("\\s+", " ")
+                                .trim();
+
+                if (!sellerName.isEmpty()) {
+
+                    availableSellerIndexes.add(j);
                 }
             }
 
-            if (availableNewSellers.isEmpty()) {
+            if (availableSellerIndexes.isEmpty()) {
 
                 System.out.println(
-                        "⚠ No different seller available."
+                        "⚠ No other seller available"
                 );
 
                 skippedProducts++;
@@ -1508,164 +1594,514 @@ public void changeSellerForAllProducts() throws InterruptedException {
             }
 
             // =================================================
-            // 9. Select random NEW seller
+            // RANDOM SELLER
             // =================================================
 
-            WebElement newSellerElement =
-                    availableNewSellers.get(
-                            random.nextInt(
-                                    availableNewSellers.size()
-                            )
+            int randomPosition =
+                    random.nextInt(
+                            availableSellerIndexes.size()
                     );
 
-            String newSeller = newSellerElement
-                    .getText()
-                    .replaceAll("\\s+", " ")
-                    .trim();
+            int newSellerIndex =
+                    availableSellerIndexes.get(randomPosition);
 
-            js.executeScript(
-                    "arguments[0].scrollIntoView({block:'center'});",
-                    newSellerElement
+            String newSeller =
+                    sellerHeaders.get(newSellerIndex)
+                            .getText()
+                            .replaceAll("\\s+", " ")
+                            .trim();
+
+            
+/*            System.out.println(
+                    "----------------------------------------------"
             );
 
-            Thread.sleep(300);
+            System.out.println(
+                    "OLD SELLER : " +
+                    oldSeller
+            );
+            
+            System.out.println(
+                    "NEW SELLER : " +
+                    newSeller
+            );         
+
+            System.out.println(
+                    "----------------------------------------------"
+            );*/
+
+         
+            // =================================================
+            // RE-FIND NEW SELLER CELL
+            // =================================================
+
+            sellerTable =
+                    accordionRoot.findElement(
+                            By.xpath(".//table")
+                    );
+
+            firstRow =
+                    sellerTable.findElement(
+                            By.xpath(".//tbody/tr[1]")
+                    );
+
+            cells =
+                    firstRow.findElements(
+                            By.xpath("./th | ./td")
+                    );
+
+            WebElement newSellerCell =
+                    cells.get(newSellerIndex);
+
+            // =================================================
+            // HIGHLIGHT NEW SELLER
+            // =================================================
 
             js.executeScript(
-                    "arguments[0].click();",
-                    newSellerElement
+                    "arguments[0].style.border='3px solid blue';" +
+                    "arguments[0].style.backgroundColor='lightblue';",
+                    newSellerCell
             );
 
             Thread.sleep(500);
 
+            // =================================================
+            // SCROLL NEW SELLER
+            // =================================================
+
+            js.executeScript(
+                    "arguments[0].scrollIntoView({block:'center', inline:'center'});",
+                    newSellerCell
+            );
+
+            Thread.sleep(700);
+
+            // =================================================
+            // FIND MUI CHECKBOX
+            // =================================================
+
+            WebElement newSellerCheckbox;
+
+            try {
+
+                newSellerCheckbox =
+                        newSellerCell.findElement(
+                                By.xpath(
+                                        ".//input[@type='checkbox']"
+                                )
+                        );
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "❌ Checkbox not found for NEW seller : " +
+                        newSeller
+                );
+
+                skippedProducts++;
+                continue;
+            }
+
+            // =================================================
+            // FIND MUI CHECKBOX CONTAINER
+            // =================================================
+
+            WebElement newSellerContainer = null;
+
+            try {
+
+                newSellerContainer =
+                        newSellerCell.findElement(
+                                By.xpath(
+                                        ".//span[contains(@class,'MuiButtonBase-root')]"
+                                )
+                        );
+
+            } catch (Exception e) {
+
+                try {
+
+                    newSellerContainer =
+                            newSellerCell.findElement(
+                                    By.xpath(
+                                            ".//span[contains(@class,'MuiCheckbox-root')]"
+                                    )
+                            );
+
+                } catch (Exception ex) {
+
+                    System.out.println(
+                            "⚠ MUI checkbox container not found"
+                    );
+                }
+            }
+
+            // =================================================
+            // CLICK NEW SELLER
+            // =================================================
+
+            if (newSellerContainer != null) {
+
+                try {
+
+                    newSellerContainer.click();
+
+                } catch (Exception e) {
+
+                    System.out.println(
+                            "⚠ Normal click failed. Trying Actions click."
+                    );
+
+                    new org.openqa.selenium.interactions.Actions(driver)
+                            .moveToElement(newSellerContainer)
+                            .click()
+                            .perform();
+                }
+
+            } else {
+
+                System.out.println(
+                        "👉 Clicking checkbox input"
+                );
+
+                try {
+
+                    newSellerCheckbox.click();
+
+                } catch (Exception e) {
+
+                    js.executeScript(
+                            "arguments[0].click();",
+                            newSellerCheckbox
+                    );
+                }
+            }
+
+            // =================================================
+            // WAIT FOR REACT
+            // =================================================
+
+            Thread.sleep(1500);
+
+            // =================================================
+            // RE-FIND TABLE AFTER REACT UPDATE
+            // =================================================
+
+            sellerTable =
+                    accordionRoot.findElement(
+                            By.xpath(".//table")
+                    );
+
+            firstRow =
+                    sellerTable.findElement(
+                            By.xpath(".//tbody/tr[1]")
+                    );
+
+            cells =
+                    firstRow.findElements(
+                            By.xpath("./th | ./td")
+                    );
+
+            // =================================================
+            // GET FINAL OLD CHECKBOX
+            // =================================================
+
+            WebElement latestOldCheckbox =
+                    cells.get(oldSellerIndex).findElement(
+                            By.xpath(
+                                    ".//input[@type='checkbox']"
+                            )
+                    );
+
+            // =================================================
+            // GET FINAL NEW CHECKBOX
+            // =================================================
+
+            WebElement latestNewCheckbox =
+                    cells.get(newSellerIndex).findElement(
+                            By.xpath(
+                                    ".//input[@type='checkbox']"
+                            )
+                    );
+
+            // =================================================
+            // VALIDATE
+            // =================================================
+
+//            System.out.println(
+//                    "CHANGE SELLER VALIDATION"
+//            );
+
+ //          System.out.println(
+ //                   "----------------------------------------------"
+ //           );
+
             System.out.println(
-                    "New Seller : " + newSeller
+                    "PRODUCT NAME  : " +
+                    productName
             );
 
-            // =================================================
-            // 10. Store change details
-            // =================================================
+            System.out.println(
+                    "Old Seller    : " +
+                    oldSeller
+            );         
 
-            changeDetails.add(
-                    "Product: " + productName +
-                    " | Old Seller: " + oldSeller +
-                    " | New Seller: " + newSeller
+            System.out.println(
+                    "New Seller    : " +
+                    newSeller
             );
 
-            changedProducts++;
+//            System.out.println(
+//                    "----------------------------------------------"
+//            );  
+
+
+            if (!latestOldCheckbox.isSelected()
+                    && latestNewCheckbox.isSelected()) {
+
+                System.out.println();
+                System.out.println(
+                        "✅ SELLER CHANGED SUCCESSFULLY"
+                );
+
+                System.out.println(
+                        oldSeller +
+                        "  --->  " +
+                        newSeller
+                );
+
+                changedProducts++;
+
+                changeDetails.add(
+                        "Product: " +
+                        productName +
+                        " | OLD SELLER: " +
+                        oldSeller +
+                        " | NEW SELLER: " +
+                        newSeller
+                );
+
+            } else {
+
+                skippedProducts++;
+            }
+
+            Thread.sleep(1000);
 
         } catch (StaleElementReferenceException e) {
 
+            System.out.println();
             System.out.println(
-                    "⚠ Product became stale. Retrying product..."
+                    "⚠ Product " +
+                    (i + 1) +
+                    " became stale."
             );
 
-            i--;
+            System.out.println(
+                    "⚠ React refreshed the DOM."
+            );
+
+            skippedProducts++;
+
+            Thread.sleep(700);
 
         } catch (Exception e) {
 
             System.out.println(
-                    "❌ Failed processing product " +
-                    (i + 1) +
-                    " : " + e.getMessage()
+                    "Product : " +
+                    productNameSafe(i)
+            );
+
+            System.out.println(
+                    "Reason : " +
+                    e.getMessage()
             );
 
             skippedProducts++;
+
+            Thread.sleep(700);
         }
     }
 
     // =========================================================
-    // 11. Print summary BEFORE Submit
+    // FINAL SUMMARY
     // =========================================================
-
-    System.out.println();
-    System.out.println("==============================================");
-    System.out.println("           SELLER CHANGE SUMMARY");
-    System.out.println("==============================================");
-
-    System.out.println(
-            "Total Products Found : " + totalProducts
-    );
-
-    System.out.println(
-            "Products Changed     : " + changedProducts
-    );
-
-    System.out.println(
-            "Products Skipped     : " + skippedProducts
-    );
-
-    System.out.println("----------------------------------------------");
 
     for (String detail : changeDetails) {
 
-        System.out.println("✅ " + detail);
+        System.out.println(
+                "✅ " +
+                detail
+        );
     }
 
-    System.out.println("==============================================");
+    System.out.println("================================================");
 
     // =========================================================
-    // 12. Submit ALL seller changes
+    // SUBMIT ONLY IF ACTUAL CHANGES EXIST
     // =========================================================
 
     if (changedProducts > 0) {
 
+        System.out.println();
         System.out.println(
-                "Submitting seller changes..."
+                "👉 Submitting " +
+                changedProducts +
+                " seller changes..."
         );
 
-        wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        By.xpath("//button[normalize-space()='Submit']")
-                )
-        ).click();
+        WebElement submitBtn =
+                wait.until(
+                        ExpectedConditions.elementToBeClickable(
+                                By.xpath(
+                                        "//button[normalize-space()='Submit']"
+                                )
+                        )
+                );
+
+        js.executeScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                submitBtn
+        );
 
         Thread.sleep(700);
 
-        // Confirm popup
-        try {
-
-            wait.until(
-                    ExpectedConditions.elementToBeClickable(
-                            By.xpath("//button[normalize-space()='Confirm']")
-                    )
-            ).click();
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Confirm button not displayed."
-            );
-        }
-
-        Thread.sleep(700);
-
-        // OK popup
-        try {
-
-            wait.until(
-                    ExpectedConditions.elementToBeClickable(
-                            By.xpath("//button[normalize-space()='OK']")
-                    )
-            ).click();
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "OK button not displayed."
-            );
-        }
+        submitBtn.click();
 
         System.out.println(
-                "✅ All seller changes submitted successfully."
+                "✅ Submit clicked"
+        );
+
+        Thread.sleep(1500);
+
+        // =====================================================
+        // CONFIRM
+        // =====================================================
+
+        try {
+
+            WebElement confirmBtn =
+                    wait.until(
+                            ExpectedConditions.elementToBeClickable(
+                                    By.xpath(
+                                            "//button[normalize-space()='Confirm']"
+                                    )
+                            )
+                    );
+
+            confirmBtn.click();
+
+            System.out.println(
+                    "✅ Confirm clicked"
+            );
+
+            Thread.sleep(1500);
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "⚠ Confirm button not displayed"
+            );
+        }
+
+        // =====================================================
+        // OK
+        // =====================================================
+
+        try {
+
+            WebElement okBtn =
+                    wait.until(
+                            ExpectedConditions.elementToBeClickable(
+                                    By.xpath(
+                                            "//button[normalize-space()='OK']"
+                                    )
+                            )
+                    );
+
+            okBtn.click();
+
+            System.out.println(
+                    "✅ OK clicked"
+            );
+
+            Thread.sleep(1000);
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "⚠ OK button not displayed"
+            );
+        }
+
+        System.out.println();
+        System.out.println(
+                "✅ SELLER CHANGE COMPLETED SUCCESSFULLY"
         );
 
     } else {
 
-        System.out.println(
-                "⚠ No seller changes were made. Submit skipped."
-        );
+//        System.out.println();
+//        System.out.println(
+//                "⚠ NO SELLER CHANGES WERE MADE."
+//        );
     }
 }
+private String productNameSafe(int index) {
+
+    try {
+
+        List<WebElement> products = driver.findElements(
+                By.xpath(
+                        "//div[contains(@class,'MuiAccordion-root')]"
+                      + "//div[contains(@class,'MuiAccordionSummary-root')]"
+                      + "[.//div[contains(@class,'product-name')]]"
+                )
+        );
+
+        if (index < products.size()) {
+
+            return products.get(index)
+                    .findElement(
+                            By.xpath(
+                                    ".//div[contains(@class,'product-name')]"
+                            )
+                    )
+                    .getText()
+                    .trim();
+        }
+
+    } catch (Exception e) {
+        // Ignore
+    }
+
+    return "Product " + (index + 1);
+}
+
+public void submitActions() throws InterruptedException {
+
+wait.until(
+      ExpectedConditions.elementToBeClickable(
+              By.xpath("//button[normalize-space()='Submit']")
+      )
+).click();
+
+wait.until(
+      ExpectedConditions.elementToBeClickable(
+              By.xpath("//button[normalize-space()='Confirm']")
+      )
+).click();
+
+wait.until(
+      ExpectedConditions.elementToBeClickable(
+              By.xpath("//button[normalize-space()='OK']")
+      )
+).click();
+
+}
+
+
+
 //public String getSellerName() {
 //
 //    // Wait for table
@@ -5112,8 +5548,9 @@ private void changeStatus4(int rowIndex, String statusText) throws InterruptedEx
 	select.selectByVisibleText(statusText);
 
 	driver.findElement(By.xpath("//textarea[@name='sName']")).sendKeys("Status updated automatically");
-
+	Thread.sleep(500);
 	driver.findElement(By.xpath("//button[normalize-space()='Submit']")).click();
+	Thread.sleep(500);
 	driver.findElement(By.xpath("//button[normalize-space()='Confirm']")).click();
 	Thread.sleep(2000);
 	 driver.findElement(By.xpath("//*[@id=\"react-confirm-alert\"]/div/div/div/div/button")).click();
@@ -5126,7 +5563,7 @@ public void Lpofulfillment4(int rowIndex) throws InterruptedException {
 
 	WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
 			By.xpath("//table//tbody//tr[" + rowIndex + "]//button[contains(@class,'dropdown-toggle')]")));
-//	Thread.sleep(1000);
+	Thread.sleep(1000);
 	moreBtn.click();
 
 	WebElement option = wait.until(ExpectedConditions.elementToBeClickable(
