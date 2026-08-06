@@ -20,13 +20,25 @@ public class LoginSnoc {
 		this.driver = driver;	
 	}
 		
-	By phNum = By.xpath("//input[@type='text']");  //*[@id=\"username\"]
+//	By phNum = By.xpath("//input[@type='text']");  //*[@id=\"username\"]
+	By phNum = By.xpath("//*[@name='userName']");
 	By passWord = By.xpath("//input[@type='password']");
 	By login = By.xpath("//button[text()='Login']");
 	By LoginVali = By.xpath("//*[@id=\"root\"]/div/div[1]/div[2]/span");
 	
+//	public void enterusername() throws InterruptedException {
+//		Thread.sleep(1000);
+//	driver.findElement(phNum).sendKeys("UAEADMIN");
+//	}
 	public void enterusername() {
-	driver.findElement(phNum).sendKeys("uaeadmin");
+
+	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+	    WebElement username = wait.until(
+	            ExpectedConditions.elementToBeClickable(phNum));
+
+	    username.clear();
+	    username.sendKeys("UAEADMIN");
 	}
 	
 	public void enterpassword() {
@@ -46,14 +58,6 @@ public class LoginSnoc {
 	    } catch (Exception e) {
 	        // ignore if not present
 	    }
-//
-//	    try {
-//	        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
-//	        Alert alert = wait.until(ExpectedConditions.alertIsPresent());
-//	        alert.accept();
-//	    } catch (Exception e) {
-//	        // ignore if not present
-	    
 	}
 
 	public void SnocAdminValidation() {
