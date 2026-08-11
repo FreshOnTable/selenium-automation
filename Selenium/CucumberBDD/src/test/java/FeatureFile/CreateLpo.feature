@@ -51,7 +51,6 @@ Then only FOC orders should be displayed with zero order margin
       | All                 |
   
     
-   
   Scenario Outline: Change seller
   Given User is on Create LPO page
   When User select random products
@@ -98,7 +97,7 @@ Scenario: Add more batches for QC rejection
    When User completes LPO with zero received qty
    And User changes any 1 LPO to the "Partially Fulfilled And Awaiting For Approval" Lpo status 
    
-  
+    
    Scenario: Edit LPO 
    Given User is on Create LPO page
    When Select some existing products
@@ -122,9 +121,10 @@ Scenario: Add more batches for QC rejection
    And Click more button and send approval request 
    Then Confirm the approval request sent  
    
-   @Lpo_01
+    @Lpo_01
    Scenario: Lpo stock validation
    Given User is on Create LPO page
+   When Select some existing products in lpo page
    When User changes any 1 LPO to the "Awaiting for Acceptance" status for completing LPO 
    Then Open the stock summary page and search the product 
    And validate the stock entry is happend or not

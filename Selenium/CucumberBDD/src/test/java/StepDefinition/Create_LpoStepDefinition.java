@@ -11,6 +11,7 @@ import org.testng.Assert;
 
 import PageObject.CreateLpo;
 import PageObject.LoginSnoc;
+import PageObject.stockSummaryPage;
 import Utils.Setuptest;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -20,14 +21,23 @@ import io.cucumber.java.en.When;
 
 public class Create_LpoStepDefinition {
 	private String selectedProduct;
+	
+	private String capturedProductName;
+	private String capturedProductUom;
+	private String capturedSellerName;
+	private String capturedRecQty;
+	
 	LocalDate fromDate;
     LocalDate toDate;
 	
 //	static WebDriver driver;
 	public Setuptest testsetup;
+	public stockSummaryPage stockSummeryPage;
+	
 
 	public Create_LpoStepDefinition(Setuptest testSetup) {
 		this.testsetup = testSetup;
+		this.stockSummeryPage = testSetup.pageObjectManager.getStockSummaryPage();
 	}
 	
 	@Given("User navigates to Create LPO page")
@@ -144,7 +154,7 @@ public class Create_LpoStepDefinition {
 	@Given("User is on Create LPO page")
 	public void User_navigates_Create_LPO_page1() throws InterruptedException {
 		CreateLpo Lpo = testsetup.pageObjectManager.getCreateLpo();
-		Thread.sleep(2000);
+		Thread.sleep(1000);
 		Lpo.clickthreedot();
 		Thread.sleep(2000);
 		Lpo.clickprocurement();
@@ -473,9 +483,10 @@ public void User_changes_any_lp_os_to_the_Lpo_status(int count, String string) t
 public void select_some_existing_products() throws InterruptedException {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo(); 
 	Thread.sleep(1000);	
-	lpoPage.searchSeller();
+//	lpoPage.searchSeller();
 	Thread.sleep(3000);
-	lpoPage.selectAllproducts();	
+//	lpoPage.selectAllproducts();
+	lpoPage.selectOnlyApprovedProducts(3);
 	Thread.sleep(1000);
 	lpoPage.clickNext();
 	Thread.sleep(1000);
@@ -557,20 +568,25 @@ public void confirm_the_approval_request_sent() {
 
 
 // LPO stock entry validation
+
+@When("Select some existing products in lpo page")
+public void select_some_existing_products_in_lpo_page() throws InterruptedException {
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	Thread.sleep(3000);
+	lpoPage.selectOnlyApprovedProducts(1);
+}
 @When("User changes any {int} LPO to the {string} status for completing LPO")
 public void user_changes_any_lpo_to_the_status_for_completing_lpo(
         int count, String value) throws InterruptedException {
 	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
 	Thread.sleep(1000);
-	lpoPage.selectAllproducts();
 //	lpoPage.selectproducts();
-//	lpoPage.selectOnlyApprovedProducts(2);
 	Thread.sleep(1000);
 	lpoPage.clickNext();
     Thread.sleep(1000);
     lpoPage.updateOrderQtyForAllProducts();
     lpoPage.clickNext();
-    lpoPage.selectRandomDeliveryHub();
+    lpoPage.selectSingleDeliveryHub();
     Thread.sleep(1000);
     lpoPage.clickSubmit();
     Thread.sleep(1000);
@@ -580,17 +596,81 @@ public void user_changes_any_lpo_to_the_status_for_completing_lpo(
     Thread.sleep(1000);
 	lpoPage.validateLpoCreated();
 	Thread.sleep(1000);
+//	lpoPage.captureLPOId();
+	Thread.sleep(1000);
 	lpoPage.processTopWaitingForAcceptanceLpos4(count);
 	Thread.sleep(1000);
-	lpoPage.completeLPO4(count, value);
+	lpoPage.completeLPO4(count, value);  
+	Thread.sleep(2000);
+    lpoPage.viewLPO();
+    Thread.sleep(2000);
+    
+    String productName = lpoPage.getPrdName();
+    String productUom = lpoPage.getUOM();
+    String sellerName = lpoPage.getSellerName();
+    String receivedQty = lpoPage.getRecQty();
+    
+    testsetup.productName = lpoPage.getPrdName();
+    System.out.println("Captured Product Name : " + testsetup.productName);
+    testsetup.productUOM = lpoPage.getUOM();
+    System.out.println("Captured Product UOM : " + testsetup.productUOM);
+    testsetup.sellerName = lpoPage.getSellerName();
+    System.out.println("Captured Seller Name : " + testsetup.sellerName);
+    testsetup.RecQty = lpoPage.getRecQty();
+    System.out.println("Captured LPO Rec Qty : " + testsetup.RecQty);
+    
+    capturedProductName = lpoPage.getPrdName();
+    capturedProductUom = lpoPage.getUOM();
+    capturedSellerName = lpoPage.getSellerName();
+    capturedRecQty = lpoPage.getRecQty();
+    
+    Thread.sleep(1000);
+    lpoPage.clickBackBtn();
     
 }
+
 @Then("Open the stock summary page and search the product")
-public void open_the_stock_summary_page_and_search_the_product() {
-    
+public void open_the_stock_summary_page_and_search_the_product() throws InterruptedException {
+	stockSummaryPage stockSummaryPage = testsetup.pageObjectManager.getStockSummaryPage();
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	Thread.sleep(2000);
+	lpoPage.clickthreedot();
+	Thread.sleep(1000);
+	stockSummaryPage.clickStockMenu();
+	stockSummaryPage.clickStockSummaryMenu();
+	stockSummaryPage.clickProductNameFilterIcon();
+
+    stockSummaryPage.enterProductNameInFilterInput(testsetup.productName);
+    Thread.sleep(1000);
+    stockSummaryPage.clickUomFilterIcon();
+	stockSummaryPage.enterUomInFilterInput(testsetup.productUOM);
+	Thread.sleep(1000);
+	stockSummaryPage.expandRowIcon();	
+	Thread.sleep(2000);
+
+    // Use previously captured seller name
+    if (capturedSellerName == null ||
+            capturedSellerName.trim().isEmpty()) {
+
+        throw new RuntimeException(
+                "❌ Captured seller name is NULL/EMPTY"
+        );
+    }
+
+    stockSummaryPage.clickSeller(capturedSellerName);
+
 }
+	
+//	stockSummaryPage.enterProductNameInFilterInput(prdName);
+
 @And("validate the stock entry is happend or not")
-public void validate_the_stock_entry_is_happend_or_not() {
+public void validate_the_stock_entry_is_happend_or_not() throws InterruptedException {
+	stockSummaryPage stockSummaryPage = testsetup.pageObjectManager.getStockSummaryPage();
+	CreateLpo lpoPage = testsetup.pageObjectManager.getCreateLpo();
+	Thread.sleep(1000);
+	stockSummaryPage.selectBatchDetails();
+	Thread.sleep(1000);
+	stockSummaryPage.validateStockEntryQuantity(capturedRecQty);
     
 }
 }

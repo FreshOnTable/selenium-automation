@@ -14,6 +14,7 @@ public WebDriver driver;
 	public Delivery_Module deliveryschedule;
 	public UserCreation usercreation;
 	public UOM_Conversion conversion;
+	public stockSummaryPage stocksummary;
 	
 	public Objectmanager(WebDriver driver) {
 		this.driver = driver;
@@ -58,5 +59,11 @@ public WebDriver driver;
 		conversion = new UOM_Conversion(driver);
 		return conversion;
 	}
+	
+	public stockSummaryPage getStockSummaryPage() {
+		stocksummary = new stockSummaryPage(driver);
+		return stocksummary;
+	}
+
 
 }

@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
@@ -302,10 +303,10 @@ public class CreateLpo {
 
 	            if (!isWhiteRow) {
 
-	                System.out.println(
-	                        "⏭ Skipping " + productName +
-	                        " because this product is not Approved."
-	                );
+//	                System.out.println(
+//	                        "⏭ Skipping " + productName +
+//	                        " because this product is not Approved."
+//	                );
 
 	                continue;
 	            }
@@ -2490,7 +2491,7 @@ public void selectRandomDeliveryHub() {
             By.xpath("//div[contains(@class,'lpo-accordion')]")
     ).size();
 
-    System.out.println("Total LPOs found: " + lpoCount);
+    System.out.println("Total LPOs Created: " + lpoCount);
 
     for (int i = 0; i < lpoCount; i++) {
 
@@ -2534,9 +2535,65 @@ public void selectRandomDeliveryHub() {
 //                "LPO " + (i + 1) + " → Selected Delivery Hub: " +
 //                select.getFirstSelectedOption().getText()
 //        );
-
     }
-}
+    }
+    
+    public void selectSingleDeliveryHub() {
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+
+        int lpoCount = driver.findElements(
+                By.xpath("//div[contains(@class,'lpo-accordion')]")
+        ).size();
+
+        System.out.println("Total LPOs Created: " + lpoCount);
+
+        for (int i = 0; i < lpoCount; i++) {
+
+            WebElement accordion = driver.findElements(
+                    By.xpath("//div[contains(@class,'lpo-accordion')]")
+            ).get(i);
+
+            js.executeScript(
+                    "arguments[0].scrollIntoView({block:'center'});" +
+                    "window.scrollBy(0,-120);",
+                    accordion
+            );
+
+            if (i > 0) {
+                WebElement accordionHeader = accordion.findElement(
+                        By.xpath(".//div[contains(@class,'accordion-top')]")
+                );
+
+                js.executeScript("arguments[0].click();", accordionHeader);
+            }
+
+            WebElement deliveryHubDropdown = wait.until(
+                    ExpectedConditions.visibilityOfElementLocated(
+                            By.xpath(
+                                    "(//div[contains(@class,'lpo-accordion')])[" +
+                                    (i + 1) +
+                                    "]//select[@name='del_hub_id_select']"
+                            )
+                    )
+            );
+
+            Select select = new Select(deliveryHubDropdown);
+
+            // Always select Warehouse4A
+            select.selectByVisibleText(
+                    "Warehouse4A, Belhasa Compound, Al Quoz Industrial Area 3, Dubai, UAE"
+            );
+
+            System.out.println(
+                    "LPO " + (i + 1) +
+                    " → Selected Delivery Hub: " +
+                    select.getFirstSelectedOption().getText()
+            );
+        }
+    }
+
 
 public void clickSubmit() {
 	WebElement submitBtn = driver.findElement(submitButton);
@@ -2566,6 +2623,30 @@ public void validateLpoCreated() {
 
 	    System.out.println("✅ Test case passed – LPO created successfully");
 	}
+
+public String captureLPOId() {
+	
+	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".react-confirm-alert-body")));
+
+	String popupText = driver.findElement(By.cssSelector(".react-confirm-alert-body")).getText();
+	System.out.println("Popup text: " + popupText);
+
+	Pattern pattern = Pattern.compile("\\[\\s*(\\d+)\\s*\\]");
+	Matcher matcher = pattern.matcher(popupText);
+
+	String orderId = "";
+
+	if (matcher.find()) {
+	    orderId = matcher.group(1);
+	}
+
+	System.out.println("Created LPO ID: " + orderId);
+	
+	driver.findElement(By.xpath("//button[text()='No']")).click();
+	return orderId;
+	
+}
 
 
 // Change LPO status or Accepted But Unfulfilled
@@ -2721,7 +2802,7 @@ Thread.sleep(1000);
 
 	    } catch (TimeoutException e) {
 	        // Popup did not appear → continue
-	        System.out.println("✅ No supplier price popup");
+	        System.out.println("✅ supplier price is less then Lpo price No popup");
 	    }
 
 	 // ================= READ QUANTITY =================
@@ -5529,7 +5610,11 @@ private void processSingleLpo4(int rowIndex) throws InterruptedException {
 
 private void changeStatus4(int rowIndex, String statusText) throws InterruptedException  {
 
-	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
+	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+	
+	// Wait until page loader disappears
+    wait.until(ExpectedConditions.invisibilityOfElementLocated(
+            By.cssSelector(".fot-loader")));
 
 	// Click correct row "More"
 	WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
@@ -5546,20 +5631,53 @@ private void changeStatus4(int rowIndex, String statusText) throws InterruptedEx
 	Select select = new Select(
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("selectedStatus"))));
 	select.selectByVisibleText(statusText);
-
+	Thread.sleep(500);
 	driver.findElement(By.xpath("//textarea[@name='sName']")).sendKeys("Status updated automatically");
+
+	// Submit
 	Thread.sleep(500);
 	driver.findElement(By.xpath("//button[normalize-space()='Submit']")).click();
 	Thread.sleep(500);
 	driver.findElement(By.xpath("//button[normalize-space()='Confirm']")).click();
 	Thread.sleep(2000);
 	 driver.findElement(By.xpath("//*[@id=\"react-confirm-alert\"]/div/div/div/div/button")).click();
+	 
+}
+	public void SaveActions() {
+		
 	
+    WebElement submit = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    By.xpath("//button[normalize-space()='Submit']")));
+
+    submit.click();
+
+    // Wait for Confirm
+    WebElement confirm = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    By.xpath("//button[normalize-space()='Confirm']")));
+
+    confirm.click();
+
+    // Wait for loader after status update
+    wait.until(ExpectedConditions.invisibilityOfElementLocated(
+            By.cssSelector(".fot-loader")));
+
+    // Final alert/confirmation close button
+    WebElement closeButton = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    By.xpath("//*[@id='react-confirm-alert']/div/div/div/div/button")));
+
+    closeButton.click();
 
 }
 public void Lpofulfillment4(int rowIndex) throws InterruptedException {
 
-	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
+	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	
+	// Wait until page loader disappears
+//    wait.until(ExpectedConditions.invisibilityOfElementLocated(
+//            By.cssSelector(".fot-loader")));
 
 	WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
 			By.xpath("//table//tbody//tr[" + rowIndex + "]//button[contains(@class,'dropdown-toggle')]")));
@@ -5748,7 +5866,7 @@ Thread.sleep(1000);
 	// Click correct row "More"
 	WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
 			By.xpath("//table//tbody//tr[" + rowIndex + "]//button[contains(@class,'dropdown-toggle')]")));
-	Thread.sleep(500);
+	Thread.sleep(1000);
 	moreBtn.click();
 
 	// Click Change Status from SAME row
@@ -5761,5 +5879,77 @@ Thread.sleep(1000);
 	Thread.sleep(1000);
 	 driver.findElement(By.xpath("//*[@id=\"react-confirm-alert\"]/div/div/div/div/button")).click();
 }
-}
+	
+//LPO stock validation
+	
+	public void viewLPO() throws InterruptedException {
+	
+	 WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	    
+		// Click correct row "More"
+		WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
+				By.xpath("//table//tbody//tr//button[contains(@class,'dropdown-toggle')]")));
+		moreBtn.click();
 
+		// Click Change Status from SAME row
+		WebElement ViewLPO = wait.until(ExpectedConditions.elementToBeClickable(
+				By.xpath("//table//tbody//tr//a[contains(text(),'View LPO')]")));
+		Thread.sleep(2000);
+		ViewLPO.click();
+		
+}
+	
+	public String getPrdName() {
+	    String ProductName    = driver.findElement(By.xpath("//tr[contains(@class,'custom-row')]/td[4]")).getText();
+	            return ProductName;
+	    }
+		
+	public String getUOM() {
+		 String ProductUOM    = driver.findElement(By.xpath("//tr[contains(@class,'custom-row')]/td[5]")).getText();
+		            return ProductUOM;
+		}
+	
+	public String getSellerName() {
+
+	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+
+	    By sellerLocator = By.name("Seller");
+
+	    WebElement sellerInput = wait.until(
+	            ExpectedConditions.visibilityOfElementLocated(sellerLocator)
+	    );
+
+	    String sellerName = sellerInput.getAttribute("value");
+
+//	    System.out.println("Seller Name captured: [" + sellerName + "]");
+
+	    return sellerName.trim();
+	}
+	
+	public String getRecQty() {
+
+	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+	    WebElement recQtyElement = wait.until(
+	        ExpectedConditions.visibilityOfElementLocated(
+	            By.xpath("//tr[contains(@class,'custom-row')]/td[10]")
+	        )
+	    );
+
+	    String recQty = recQtyElement.getText().trim();
+
+//	    System.out.println("Captured LPO Rec Qty : " + recQty);
+
+	    return recQty;
+	}
+		
+		public void clickBackBtn() throws InterruptedException {
+		     WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+			WebElement clickBackBtn = wait.until(
+		            ExpectedConditions.elementToBeClickable(
+		                    By.xpath("//div[@class='text-ve-modal label']")));
+
+			clickBackBtn.click();
+
+}
+}
