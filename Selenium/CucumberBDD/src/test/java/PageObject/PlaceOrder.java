@@ -1,5 +1,7 @@
 package PageObject;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -288,7 +290,11 @@ public class PlaceOrder {
 			        }
 
 			        System.out.println("❌ No products even after filter. Retrying...");
+			        
+			        Thread.sleep(2000);
 			    }
+			    
+			    
 			}
 
 
@@ -303,7 +309,7 @@ public class PlaceOrder {
 	
 	 public double selectProduct() throws InterruptedException {
 
-		    Thread.sleep(3500);
+		    Thread.sleep(4000);
 
 		    Random random = new Random();
 		    int maxSelections = 4;
@@ -584,10 +590,9 @@ public class PlaceOrder {
 //			System.out.println("No popup appeared.");
 //		}
 
-		Thread.sleep(1000);
+		Thread.sleep(500);
 
-//		driver.findElement(By.name("ship_dt")).click();
-		Thread.sleep(1000);
+//		driver.findElement(By.name("ship_dt")).click();4rfdxz
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		driver.findElement(By.name("ship_dt")).click();
 		
@@ -619,7 +624,7 @@ public class PlaceOrder {
 			//	System.out.println("Status: Passed");
 				break;
 			}
-			Thread.sleep(2000);
+			Thread.sleep(1000);
 			
 		}
 	}
@@ -647,7 +652,9 @@ public class PlaceOrder {
 		    
 		    JavascriptExecutor js = (JavascriptExecutor) driver;
 		    
-		    js.executeScript("arguments[0].scrollIntoView({block: 'nearest'});", dropdownElement);
+//		    js.executeScript("arguments[0].scrollIntoView({block: 'nearest'});", dropdownElement);
+		    
+//		    js.executeScript("arguments[0].scrollIntoView(true);", dropdownElement);
 
 		    Select paymentDropdown = new Select(dropdownElement);
 
@@ -673,13 +680,15 @@ public class PlaceOrder {
 //		okButton.click();
 //		System.out.println("Status failed: Procced without selecting billing & shipping address(mandatory).");
 
-		Thread.sleep(3000);
+		Thread.sleep(2000);
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 	    
 		try {
 			WebElement billingAddressRadio = driver.findElement(By.name("billing_address"));
 			
-		    js.executeScript("arguments[0].scrollIntoView({block: 'nearest'});", billingAddressRadio);
+//		    js.executeScript("arguments[0].scrollIntoView({block: 'nearest'});", billingAddressRadio);
+			
+//			js.executeScript("arguments[0].scrollIntoView(true);", billingAddressRadio);
 
 			if (!billingAddressRadio.isSelected()) {
 				billingAddressRadio.click();
@@ -813,33 +822,104 @@ public class PlaceOrder {
 	}
 	
 
+//	public void validateTotalAmount(double prdValu) throws InterruptedException {
+//		Thread.sleep(1000);
+//
+//		
+//		WebElement reviewOrderButton = driver.findElement(Reviewbutton);
+//		reviewOrderButton.click();
+//		Thread.sleep(1000);
+////		driver.findElement(By.xpath("//button[text()='Yes']")).click();
+//
+//		// Fetch all selected products
+//		List<WebElement> products = driver
+//				.findElements(By.xpath("(//td[@class='text-right details bold' and @style='padding-top: 0.25rem; padding-bottom: 0.25rem;'])[4]")); 
+//		WebElement product = products.get(0);
+//
+//		// Retrieve the value (text) of the product
+//		String productValue = product.getText();
+//		double val = Double.parseDouble(productValue);
+//		if (val == prdValu) {
+//			System.out.println("Total amount is: " +val);
+//			System.out.println("Gross amount is: " +prdValu);
+//			System.out.println("Status Passed");
+//		}else {
+//			System.out.println("Total amount is: " +val);
+//			System.out.println("Gross amount is: " +prdValu);
+//			System.out.println("Status failed");
+//		}
+//		
+//	}
+	
+	
+//	public void validateTotalAmount(double prdValu) throws InterruptedException {
+//
+//	    Thread.sleep(1000);
+//
+//	    WebElement reviewOrderButton = driver.findElement(Reviewbutton);
+//	    reviewOrderButton.click();
+//	    Thread.sleep(1000);
+//
+//	    // Fetch product total value
+//	    List<WebElement> products = driver.findElements(By.xpath(
+//	        "(//td[@class='text-right details bold' and @style='padding-top: 0.25rem; padding-bottom: 0.25rem;'])[4]"
+//	    ));
+//
+//	    WebElement product = products.get(0);
+//
+//	    // Get value from UI
+//	    String productValue = product.getText().trim();
+//	    double val = Double.parseDouble(productValue);
+//
+//	    // Round both values to 1 decimal place
+//	    BigDecimal actual = new BigDecimal(val).setScale(1, RoundingMode.HALF_UP);
+//	    BigDecimal expected = new BigDecimal(prdValu).setScale(1, RoundingMode.HALF_UP);
+//
+//	    // Print values
+//	    System.out.println("Total amount is: " + actual);
+//	    System.out.println("Gross amount is: " + expected);
+//
+//	    // Compare
+//	    if (actual.equals(expected)) {
+//	        System.out.println("Status Passed");
+//	    } else {
+//	        System.out.println("Status Failed");
+//	    }
+//	}
+	
 	public void validateTotalAmount(double prdValu) throws InterruptedException {
-		Thread.sleep(1000);
 
-		
-		WebElement reviewOrderButton = driver.findElement(Reviewbutton);
-		reviewOrderButton.click();
-		Thread.sleep(1000);
-//		driver.findElement(By.xpath("//button[text()='Yes']")).click();
+	    Thread.sleep(1000);
 
-		// Fetch all selected products
-		List<WebElement> products = driver
-				.findElements(By.xpath("(//td[@class='text-right details bold' and @style='padding-top: 0.25rem; padding-bottom: 0.25rem;'])[4]")); 
-		WebElement product = products.get(0);
+	    WebElement reviewOrderButton = driver.findElement(Reviewbutton);
+	    reviewOrderButton.click();
+	    Thread.sleep(1000);
 
-		// Retrieve the value (text) of the product
-		String productValue = product.getText();
-		double val = Double.parseDouble(productValue);
-		if (val == prdValu) {
-			System.out.println("Total amount is: " +val);
-			System.out.println("Gross amount is: " +prdValu);
-			System.out.println("Status Passed");
-		}else {
-			System.out.println("Total amount is: " +val);
-			System.out.println("Gross amount is: " +prdValu);
-			System.out.println("Status failed");
-		}
-		
+	    // Fetch product total value
+	    List<WebElement> products = driver.findElements(By.xpath(
+	        "(//td[@class='text-right details bold' and @style='padding-top: 0.25rem; padding-bottom: 0.25rem;'])[4]"
+	    ));
+
+	    WebElement product = products.get(0);
+
+	    // Get value from UI
+	    String productValue = product.getText().trim();
+	    double val = Double.parseDouble(productValue);
+
+	    // 🔥 Truncate to 1 decimal place (NO rounding)
+	    BigDecimal actual = new BigDecimal(val).setScale(1, RoundingMode.DOWN);
+	    BigDecimal expected = new BigDecimal(prdValu).setScale(1, RoundingMode.DOWN);
+
+	    // Print values
+	    System.out.println("Total amount is: " + actual);
+	    System.out.println("Gross amount is: " + expected);
+
+	    // Compare
+	    if (actual.equals(expected)) {
+	        System.out.println("Status Passed");
+	    } else {
+	        System.out.println("Status Failed");
+	    }
 	}
 	
 	
