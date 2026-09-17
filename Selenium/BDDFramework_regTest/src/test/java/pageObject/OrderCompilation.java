@@ -71,6 +71,7 @@ public class OrderCompilation {
 	    
 	}
 	
+	
 	public void stockReserve() throws InterruptedException {
 
 		Thread.sleep(2000);

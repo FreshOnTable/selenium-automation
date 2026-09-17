@@ -19,7 +19,7 @@ public BaseClass setupclass;
         Order.clickgrid();
         Thread.sleep(1000);
         Order.clickorderoption();
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         Order.clickplaceorder();
 	}
 
@@ -28,7 +28,7 @@ public BaseClass setupclass;
 		Placeorder Order = setupclass.pageObjectManager.getplaceorder();
 		Thread.sleep(5000);
 		Order.clickbusinessfield();
-		Thread.sleep(2000);
+		Thread.sleep(8000);
 		Order.selectBusiness();
 	}
 	

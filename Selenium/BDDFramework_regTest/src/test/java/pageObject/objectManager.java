@@ -12,11 +12,19 @@ public class objectManager {
 	public OrderCompilation orderCompilation;
 	public DeliveryModule deliveryModule;
 	public StockModule stockModule;
+	public EditOrder editOrder;
 
 	public objectManager(WebDriver driver) {
 		this.driver = driver;
 	}
 
+	
+	public EditOrder getEditOrder() {
+		editOrder = new EditOrder(driver);
+		return editOrder;
+	}
+	
+	
 	public LoginPage getLoginPage1() {
 		loginPage = new LoginPage(driver);
 		return loginPage;

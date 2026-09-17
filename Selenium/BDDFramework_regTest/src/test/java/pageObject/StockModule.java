@@ -109,7 +109,7 @@ public class StockModule {
     // ===== NAVIGATION =====
 
     public void clickLPO() {
-        driver.get("https://mktadmin.freshontable.com/procurement/lpo");
+        driver.get("https://uat.freshontable.com/procurement/lpo");
     }
 
 //    public void clickMore() {
@@ -258,7 +258,7 @@ public class StockModule {
     
     public void searchProductId(Long productID) throws InterruptedException {
     	
-    	  driver.get("https://mktadmin.freshontable.com/inventory/ledger");
+    	  driver.get("https://uat.freshontable.com/inventory/ledger");
 
         Thread.sleep(3000);
 
