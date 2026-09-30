@@ -52,5 +52,24 @@
     <version>5.9.2</version>
 </dependency>
 
+    <!-- Selenium - you already have this -->
+    
+    <!-- Cucumber - you already have this -->
+
+    <!-- Apache POI for Excel -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>5.4.1</version>
+    </dependency>
+
+    <!-- MongoDB Java Driver -->
+    <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-sync</artifactId>
+        <version>5.5.1</version>
+    </dependency>
+
+
   </dependencies>
 </project>

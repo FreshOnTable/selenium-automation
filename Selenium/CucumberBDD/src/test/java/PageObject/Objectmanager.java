@@ -19,6 +19,11 @@ public WebDriver driver;
 	public EditProduct editProduct;
 	public ProductStatusValidation productStatusValidation;
 	public ProductMaster productMaster;
+	
+	public stockSummaryPage stocksummary;
+	public stockSegregationPage stocksegregation;
+	public ReportModule reportmodule;
+
 
 	
 	public Objectmanager(WebDriver driver) {
@@ -91,6 +96,19 @@ public WebDriver driver;
 		return productMaster;
 	}
 	
-		
+	public stockSummaryPage getStockSummaryPage() {
+		stocksummary = new stockSummaryPage(driver);
+		return stocksummary;
+	}
+
+	public stockSegregationPage getStockSegregationPage() {
+		stocksegregation = new stockSegregationPage(driver);
+		return stocksegregation;
+	}
+	
+	public ReportModule getReportModule() {
+		reportmodule = new ReportModule(driver);
+		return reportmodule;
+	}
 
 }

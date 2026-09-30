@@ -11,6 +11,11 @@ public class Setuptest {
 	public WebDriver driver;
 	public Basetest testBase;
 	public Objectmanager pageObjectManager;
+	public String productName;
+	public String productUOM;
+	public String sellerName;
+	public String RecQty;
+	public String selectedLPO;
 
 	public Setuptest() throws IOException {
 		testBase = new Basetest();
