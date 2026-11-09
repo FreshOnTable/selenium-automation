@@ -62,4 +62,6 @@ Feature: End to End order Process
   Then User select the order and enters the Amount,Transaction id and comments
   And Order is updated to "Completed" status successfully
     
+	
+	Scenario: complete order
     
