@@ -23,7 +23,7 @@ public class LoginSnoc {
 //	By phNum = By.xpath("//input[@type='text']");  //*[@id=\"username\"]
 	By phNum = By.xpath("//*[@name='userName']");
 	By passWord = By.xpath("//input[@type='password']");
-	By login = By.xpath("//button[text()='Login']");
+	By login = By.xpath("//span[text()='Sign in']");
 	By LoginVali = By.xpath("//*[@id=\"root\"]/div/div[1]/div[2]/span");
 	
 //	public void enterusername() throws InterruptedException {
