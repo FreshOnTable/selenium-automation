@@ -10,8 +10,12 @@ Feature: Title of your feature
     Then User is landing on the dashboard
     And Veryfy the login is successful
 
-@BulkOrder
-Scenario: Creating an bulk orders
-Given Creating the bulk Orders
+ @CreateBulkOrder
+ Scenario: Create multiple orders with different enterprise
+ Given Launcg the the browser
+ When User can select the business 
+ Then Select the minimum products with all mandatory fields
+ And Verify the orders created successfully
+	
 
 	

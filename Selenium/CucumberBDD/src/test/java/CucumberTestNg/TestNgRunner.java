@@ -7,7 +7,11 @@ import io.cucumber.testng.CucumberOptions;
 
 public class TestNgRunner {
 	
-@CucumberOptions(features = "src/test/java/FeatureFile", glue = "StepDefinition", monochrome = true, tags="@BusinessAccount",
+@CucumberOptions(
+		features = "src/test/java/FeatureFile", 
+		glue = "StepDefinition", 
+		monochrome = true, 
+
 			
 
 		plugin = { "html:target/cucmber.html", "json:target/cucumber.json"})
