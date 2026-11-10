@@ -159,7 +159,7 @@ public class EditProduct {
 
 		deptDrop.selectByIndex(randomIndex);
 
-		System.out.println("Selected Department : " + deptDrop.getFirstSelectedOption().getText());
+//		System.out.println("Selected Department : " + deptDrop.getFirstSelectedOption().getText());
 
 		Thread.sleep(2000);
 	}
@@ -874,7 +874,8 @@ Thread.sleep(1000);
 	WebElement element1 = driver.findElement(By.xpath("//button[text()='Submit']"));
 
 	((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", element1);
-
+	
+	Thread.sleep(500);
 	element1.click();
 
 	Thread.sleep(1000);

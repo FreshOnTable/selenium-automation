@@ -42,7 +42,7 @@ public class LoginSnoc {
 	}
 	
 	public void enterpassword() {
-		driver.findElement(passWord).sendKeys("Admin@4321");
+		driver.findElement(passWord).sendKeys("Admin@1234");
 	}
 
 	public void clickOnLoginButton() {

@@ -150,53 +150,6 @@ public void assignRandomDrivers() throws InterruptedException {
     System.out.println("✅ Random drivers assigned to all rows.");
 }
 
-/* public void changedrivers() throws InterruptedException {
-	 
-/*	 WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-	 
-
-     // Locate the row (change selector as needed)
-     WebElement row = driver.findElement(By.xpath("/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div/div[8]/div/table/tbody/tr[\"+i+\"]/td[8]"));//*[@id=\"grid_1049538271_0_content_table\"]/tbody/tr[1]
-
-     // Double-click the row
-     Actions actions = new Actions(driver);
-     actions.doubleClick(row).perform();
-
-     // Wait for dropdown to appear
-     driver.findElement(By.xpath("/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div/div[8]/div/table/tbody/tr[\"+i+\"]/td[8]")).click();
-     WebElement dropdown = wait.until(
-    ExpectedConditions.visibilityOfElementLocated(By.id("driver-dropdown_hidden"))
-     );
-
-     // Select a driver
-     Select driverSelect = new Select(dropdown);
-     driverSelect.selectByValue("Hanumantha");
- }*/
-		
-/*public void draganddrop() throws InterruptedException {
-	Thread.sleep(1000);
-    WebElement source = driver.findElement(By.xpath("(//th[@class='custom-header-content text-left'])[5]"));
-    WebElement target = driver.findElement(By.xpath("//div[@class='align-items-center']"));
-
-    Actions actions = new Actions(driver);
-    actions.dragAndDrop(source, target).perform();
-
-    Thread.sleep(2000);  
-
-    List<WebElement> driverCheckboxes = driver.findElements(By.xpath("//input[@type='checkbox']"));
-    for (int i = 0; i < driverCheckboxes.size(); i++) {
-        List<WebElement> updatedList = driver.findElements(By.xpath("//input[@type='checkbox']"));
-        WebElement checkbox = updatedList.get(i);
-        if (!checkbox.isSelected()) {
-            checkbox.click();
-            Thread.sleep(1000);
-            
-          driver.findElement(By.xpath("//div[text()='Next ']")).click();
-          
-        }
-    }
-}*/
-
 public void DragAndDrop() throws InterruptedException {
 
 	Thread.sleep(1000);

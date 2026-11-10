@@ -32,6 +32,11 @@ import org.openqa.selenium.support.ui.Select;
 public class CreateLpo {
 	
     private static double rejectedQtyFromQc;
+     String createdLpoId;
+     
+     private double beforeEditTotalAmount;
+     private double afterEditTotalAmount;
+    
 	private int getColumnIndex(String headerName) {
 
 	    List<WebElement> headers = driver.findElements(
@@ -2291,6 +2296,7 @@ public void addMoreProductOn2ndPage() throws InterruptedException {
 	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 	
 	WebElement addProduct = driver.findElement(By.xpath("//button[normalize-space()='Add More Products']"));
+	Thread.sleep(500);
 	addProduct.click();
 	
 	WebDriverWait wait1 = new WebDriverWait(driver, Duration.ofSeconds(3));
@@ -2337,7 +2343,7 @@ public void selectRandomProduct() {
     WebElement randomProduct =
             products.get(new Random().nextInt(products.size()));
 
-    System.out.println("✅ Random product: " + randomProduct.getText());
+    System.out.println("Add more product: " + randomProduct.getText());
 
     // 5️⃣ JS click (THIS FIXES YOUR ERROR)
     js.executeScript("arguments[0].click();", randomProduct);
@@ -2598,7 +2604,9 @@ public void selectRandomDeliveryHub() {
 public void clickSubmit() {
 	WebElement submitBtn = driver.findElement(submitButton);
 	submitBtn.click();
+	
 }
+
 
 public void clickConfirmBtn() {
 	WebElement submitBtn = driver.findElement(confirmButton);
@@ -2607,6 +2615,10 @@ public void clickConfirmBtn() {
 public void clickNoBtn() {
 	WebElement submitBtn = driver.findElement(NoBtn);
 	submitBtn.click();
+	
+//	createdLpoId = captureLPOId();
+//
+//	System.out.println("Created LPO ID: " + createdLpoId);
 }
 public void validateLpoCreated() {
 
@@ -2624,28 +2636,71 @@ public void validateLpoCreated() {
 	    System.out.println("✅ Test case passed – LPO created successfully");
 	}
 
-public String captureLPOId() {
+public List<String> captureLPOIds() {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+    WebElement popup = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("div.react-confirm-alert-body")
+            )
+    );
+
+    String popupText = popup.getText();
+
+    // Capture ALL LPO IDs
+    Pattern pattern = Pattern.compile("FPO\\d+");
+    Matcher matcher = pattern.matcher(popupText);
+
+    List<String> lpoIds = new ArrayList<>();
+
+    while (matcher.find()) {
+        lpoIds.add(matcher.group());
+    }
+
+    if (lpoIds.isEmpty()) {
+        throw new RuntimeException(
+                "❌ Could not capture any LPO ID from popup: " + popupText
+        );
+    }
+
+//    System.out.println("======================================");
+//    System.out.println("Total LPOs Captured: " + lpoIds.size());
+//
+//    for (String lpoId : lpoIds) {
+//        System.out.println("Captured LPO ID: " + lpoId);
+//    }
+//
+//    System.out.println("======================================");
+
+    return lpoIds;
+}
+
+
+  public String captureLPOId() {
+    
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.react-confirm-alert-body")));
 	
-	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-	wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".react-confirm-alert-body")));
+	String popupText = driver.findElement(By.cssSelector("div.react-confirm-alert-body")).getText();
 
-	String popupText = driver.findElement(By.cssSelector(".react-confirm-alert-body")).getText();
-	System.out.println("Popup text: " + popupText);
+ //   String popupText = popup.getText();
 
-	Pattern pattern = Pattern.compile("\\[\\s*(\\d+)\\s*\\]");
-	Matcher matcher = pattern.matcher(popupText);
+    Pattern pattern = Pattern.compile("\\[\\s*(FPO\\d+)\\s*\\]");
+    Matcher matcher = pattern.matcher(popupText);
 
-	String orderId = "";
+    if (!matcher.find()) {
+        throw new RuntimeException(
+                "❌ Could not capture LPO ID from popup: " + popupText
+        );
+    }
 
-	if (matcher.find()) {
-	    orderId = matcher.group(1);
-	}
+    String lpoId = matcher.group(1);
 
-	System.out.println("Created LPO ID: " + orderId);
-	
-	driver.findElement(By.xpath("//button[text()='No']")).click();
-	return orderId;
-	
+    
+    System.out.println("Captured LPO ID: " + lpoId);
+
+    return lpoId;
 }
 
 
@@ -2764,7 +2819,7 @@ public void enterInvoiceDetails1(int rowIndex) throws InterruptedException {
 Thread.sleep(1000);
 	nextDay.click();
 
-	System.out.println("Invoice date selected: Next day");
+	System.out.println("LPO Invoice date selected: Next day");
 
 
 	 Thread.sleep(2000);
@@ -2886,7 +2941,7 @@ Thread.sleep(1000);
 							+ "not(contains(@class,'e-disabled')) and " + "text()='" + targetDay + "']")));
 			targetDateElement.click();
 
-			System.out.println("Expiry date selected: " + targetDate);
+			System.out.println("Expiry date selected for batch: " + targetDate);
 			
 			driver.findElement(By.xpath("//button[normalize-space()='SUBMIT']")).click();
 			driver.findElement(By.xpath("//button[normalize-space()='Confirm']")).click();
@@ -3124,7 +3179,7 @@ Thread.sleep(1000);
 
 		    } catch (TimeoutException e) {
 		        // Popup did not appear → continue
-		        System.out.println("✅ No supplier price popup");
+//		        System.out.println("✅ No supplier price popup");
 		    }
 
 		 // ================= READ QUANTITY =================
@@ -4673,12 +4728,18 @@ Thread.sleep(1000);
 			WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
 					By.xpath("//table//tbody//tr//button[contains(@class,'dropdown-toggle')]")));
 			moreBtn.click();
-
+			Thread.sleep(1000);
 			// Click Change Status from SAME row
-			WebElement changeStatus = wait.until(ExpectedConditions.elementToBeClickable(
+			WebElement changeLpoStatus = wait.until(ExpectedConditions.elementToBeClickable(
 					By.xpath("//table//tbody//tr//a[contains(text(),'Edit LPO')]")));
 			Thread.sleep(2000);
-			changeStatus.click();
+			changeLpoStatus.click();
+			
+			beforeEditTotalAmount = getBeforeEditTotalAmount();
+
+			System.out.println("---------------------------------------");
+//			System.out.println("Total Amount BEFORE Edit: " + beforeEditTotalAmount);
+			
 
 		    JavascriptExecutor js = (JavascriptExecutor) driver;
 		    Random random = new Random();
@@ -4828,10 +4889,10 @@ Thread.sleep(1000);
 		                 qty.sendKeys(Keys.TAB);
 
 		                 Thread.sleep(500);
-
+		                
 		                 System.out.println(		                         
 		                         "Order " + (j + 1) +
-		                         " | New Req Qty = " + randomQty
+		                         " | Edited Req Qty = " + randomQty
 		                 );
 		                 
 		                 		                	 		        
@@ -4858,284 +4919,450 @@ Thread.sleep(1000);
 		            Thread.sleep(500);
 		        }
 		    }
+		    Thread.sleep(3000);
+		    driver.findElement(By.xpath("//button[normalize-space()='Save']")).click();
 		}
 		
-public void saveActions() throws InterruptedException {
-        Thread.sleep(3000); // slight delay for UI to catch up
-        driver.findElement(By.xpath("//button[normalize-space()='Save']")).click();
-	    Thread.sleep(2000);
-	    driver.findElement(By.xpath("(//button[normalize-space()='Save'])[2]")).click();
-	    Thread.sleep(1000);
-	    driver.findElement(By.xpath("//button[normalize-space()='OK']")).click();
-}
+	public double getBeforeEditTotalAmount() {
+
+		    WebDriverWait wait =
+		            new WebDriverWait(driver, Duration.ofSeconds(10));
 
 
-// Add procurement comments
+		    WebElement totalAmountElement = wait.until(
+		            ExpectedConditions.visibilityOfElementLocated(
+		                    By.xpath(
+		                            "//tr[contains(@class,'custom-row')]/td[12]"
+		                    )
+		            )
+		    );
+
+
+		    String amountText = totalAmountElement
+		            .getText()
+		            .replace("AED", "")
+		            .replace(",", "")
+		            .trim();
+
+		    return Double.parseDouble(amountText);
+		}
+
+
+		// ============================================================
+		// GET TOTAL AMOUNT FROM CONFIRMATION POPUP
+		// ============================================================
+		
+		
+		public double getConfirmationTotalAmount() throws InterruptedException {
+		    
+		    WebDriverWait wait =
+		            new WebDriverWait(driver, Duration.ofSeconds(15));
+
+		    
+		    // Wait until confirmation popup Total Amount is visible
+
+		    WebElement totalAmountElement = wait.until(
+		            ExpectedConditions.visibilityOfElementLocated(
+		                    By.xpath(
+		                            "//td[normalize-space()='Total Amount'] "+"/following-sibling::td[1]"
+		                    )
+		            )
+		    );
+
+
+		    String amountText = totalAmountElement
+		            .getText()
+		            .replace("AED", "")
+		            .replace(",", "")
+		            .trim();
+
+
+//		    System.out.println(
+//		            "Confirmation Popup Total Amount: "
+//		                    + amountText
+//		    );
+
+
+		    return Double.parseDouble(amountText);
+		}
+		
+		public void saveActions() throws InterruptedException {
+
+		    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+
+		    // ========================================================
+		    // STEP 2 - WAIT FOR CONFIRMATION POPUP
+		    // ========================================================
+
+		    Thread.sleep(1500);
+
+
+		    // ========================================================
+		    // STEP 3 - GET AFTER EDIT TOTAL AMOUNT
+		    // ========================================================
+
+		    afterEditTotalAmount  = getConfirmationTotalAmount();
+		    
+		    beforeEditTotalAmount = getBeforeEditTotalAmount();
+
+
+		    System.out.println("======================================");
+		    System.out.println("Edit LPO Validation");
+		    System.out.println(
+		            "Total Amount BEFORE Edit : "
+		                    + beforeEditTotalAmount   
+		    );
+
+		    System.out.println(
+		            "Total Amount AFTER Edit  : "
+		                    + afterEditTotalAmount
+		    );
+
+		    System.out.println("======================================");
+
+
+		    // ========================================================
+		    // STEP 4 - ASSERTION
+		    // ========================================================
+
+		    Assert.assertNotEquals(
+		            afterEditTotalAmount,
+		            beforeEditTotalAmount,
+		            "❌ Total Amount was not updated after editing Requested Qty"
+		    );
+
+
+		    // ========================================================
+		    // STEP 5 - SECOND SAVE FROM CONFIRMATION POPUP
+		    // ========================================================
+
+		    WebElement secondSave = wait.until(
+		            ExpectedConditions.elementToBeClickable(
+		                    By.xpath(
+		                            "(//button[normalize-space()='Save'])[2]"
+		                    )
+		            )
+		    );
+
+		    Thread.sleep(500);
+		    secondSave.click();
+
+		    WebElement okButton = wait.until(
+		            ExpectedConditions.elementToBeClickable(
+		                    By.xpath(
+		                            "//button[normalize-space()='OK']"
+		                    )
+		            )
+		    );
+
+		    Thread.sleep(1000);
+		    okButton.click();
+		}
+		
+//public void saveActions() throws InterruptedException {
+//        Thread.sleep(3000); // slight delay for UI to catch up
+//        driver.findElement(By.xpath("//button[normalize-space()='Save']")).click();
+//        
+//	    Thread.sleep(2000);
+//	    driver.findElement(By.xpath("(//button[normalize-space()='Save'])[2]")).click();
+//	    Thread.sleep(1000);
+//	    driver.findElement(By.xpath("//button[normalize-space()='OK']")).click();
+//}
+
+		public void addProcurementCommentsForTwoProducts() throws InterruptedException {
+
+		    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+		    JavascriptExecutor js = (JavascriptExecutor) driver;
+		    Random random = new Random();
+
+		    // =========================================================
+		    // 1. Get MAIN PRODUCT rows only
+		    // =========================================================
+
+		    List<WebElement> productRows = driver.findElements(
+		            By.xpath("//table//tbody/tr[td[2][normalize-space()!='']]")
+		    );
+
+		    System.out.println("======================================");
+		    System.out.println("Total Products Available: " + productRows.size());
+		    System.out.println("======================================");
+
+		    if (productRows.size() < 2) {
+		        throw new RuntimeException(
+		                "❌ Less than 2 products available. Available: "
+		                        + productRows.size()
+		        );
+		    }
+
+		    // =========================================================
+		    // 2. Select exactly 2 RANDOM product indexes
+		    // =========================================================
+
+		    List<Integer> selectedIndexes = new ArrayList<>();
+
+		    while (selectedIndexes.size() < 2) {
+
+		        int randomIndex = random.nextInt(productRows.size());
+
+		        if (!selectedIndexes.contains(randomIndex)) {
+		            selectedIndexes.add(randomIndex);
+		        }
+		    }
+
+		    System.out.println(
+		            "Selected Product Indexes: " + selectedIndexes
+		    );
+
+		    int commentsAdded = 0;
+
+		    // =========================================================
+		    // 3. Process only 2 products
+		    // =========================================================
+
+		    for (int index : selectedIndexes) {
+
+		        try {
+
+		            // Re-read rows every time because DOM can change
+		            productRows = driver.findElements(
+		                    By.xpath("//table//tbody/tr[td[2][normalize-space()!='']]")
+		            );
+
+		            WebElement productRow = productRows.get(index);
+
+		            // =====================================================
+		            // Get Product Name
+		            // =====================================================
+
+		            String productName = productRow
+		                    .findElement(By.xpath("./td[4]"))
+		                    .getText()
+		                    .trim();
+
+		            if (productName.isEmpty()) {
+
+		                System.out.println(
+		                        "⚠ Product name is blank for index: " + index
+		                );
+
+		                // Try another column if your application structure changes
+		                productName = productRow
+		                        .findElement(By.xpath("./td[contains(@class,'product')]"))
+		                        .getText()
+		                        .trim();
+		            }
+
+		            System.out.println(
+		                    "======================================"
+		            );
+
+		            System.out.println(
+		                    "Processing Product: " + productName
+		            );
+
+		            // =====================================================
+		            // Find MORE button ONLY inside current product row
+		            // =====================================================
+
+		            List<WebElement> moreButtons = productRow.findElements(
+		                    By.xpath(
+		                            ".//button[contains(@class,'dropdown-toggle') " +
+		                            "or contains(@class,'more') " +
+		                            "or .//*[contains(@class,'more')] ]"
+		                    )
+		            );
+
+		            if (moreButtons.isEmpty()) {
+
+		                System.out.println(
+		                        "⚠ More button not found for: " + productName
+		                );
+
+		                continue;
+		            }
+
+		            WebElement moreButton = moreButtons.get(0);
+
+		            js.executeScript(
+		                    "arguments[0].scrollIntoView({block:'center'});",
+		                    moreButton
+		            );
+
+		            Thread.sleep(500);
+
+		            wait.until(
+		                    ExpectedConditions.elementToBeClickable(moreButton)
+		            );
+
+		            moreButton.click();
+
+		            Thread.sleep(500);
+
+		            // =====================================================
+		            // Click Procurement Comment option
+		            // =====================================================
+
+		            WebElement procurementComment = wait.until(
+		                    ExpectedConditions.elementToBeClickable(
+		                            By.xpath(
+		                                    "//a[contains(@class,'dropdown-item') " +
+		                                    "and contains(normalize-space(.)," +
+		                                    "'Add/View/Edit Procurement Comment')]"
+		                            )
+		                    )
+		            );
+
+		            procurementComment.click();
+
+		            Thread.sleep(1000);
+
+		            // =====================================================
+		            // Select random procurement comment
+		            // =====================================================
+
+		            List<WebElement> commentOptions = wait.until(
+		                    ExpectedConditions.visibilityOfAllElementsLocatedBy(
+		                            By.xpath(
+		                                    "//select//option[" +
+		                                    "normalize-space(.)!='' " +
+		                                    "and not(@disabled)" +
+		                                    "]"
+		                            )
+		                    )
+		            );
+
+		            if (commentOptions.isEmpty()) {
+
+		                throw new RuntimeException(
+		                        "❌ No procurement comments available for: "
+		                                + productName
+		                );
+		            }
+
+		            WebElement randomCommentOption =
+		                    commentOptions.get(
+		                            random.nextInt(commentOptions.size())
+		                    );
+
+		            String selectedComment =
+		                    randomCommentOption.getText().trim();
+
+		            System.out.println(
+		                    "Selected Comment: " + selectedComment
+		            );
+
+		            // =====================================================
+		            // Select comment
+		            // =====================================================
+
+		            Select commentSelect = new Select(
+		                    randomCommentOption.findElement(
+		                            By.xpath("./parent::select")
+		                    )
+		            );
+
+		            commentSelect.selectByVisibleText(selectedComment);
+
+		            Thread.sleep(500);
+
+		            // =====================================================
+		            // Click Save inside procurement comment popup
+		            // =====================================================
+
+		            WebElement saveComment = wait.until(
+		                    ExpectedConditions.elementToBeClickable(
+		                            By.xpath(
+		                                    "//button[normalize-space()='Save']"
+		                            )
+		                    )
+		            );
+
+		            saveComment.click();
+
+		            Thread.sleep(1000);
+
+		            commentsAdded++;
+
+		            System.out.println(
+		                    "✅ Comment saved for: " + productName
+		            );
+
+		            System.out.println(
+		                    "Comment: " + selectedComment
+		            );
+
+		            System.out.println(
+		                    "Products with comments: " + commentsAdded
+		            );
+
+		            System.out.println(
+		                    "======================================"
+		            );
+
+		            // =====================================================
+		            // STOP AFTER EXACTLY 2 PRODUCTS
+		            // =====================================================
+
+		            if (commentsAdded == 2) {
+
+		                System.out.println(
+		                        "======================================"
+		                );
+
+		                System.out.println(
+		                        "✅ Procurement comments added to exactly 2 products."
+		                );
+
+		                System.out.println(
+		                        "Total Products Updated: " + commentsAdded
+		                );
+
+		                System.out.println(
+		                        "======================================"
+		                );
+
+		                break;
+		            }
+
+		        } catch (StaleElementReferenceException e) {
+
+		            System.out.println(
+		                    "⚠ Product row became stale. Skipping this product."
+		            );
+
+		        } catch (TimeoutException e) {
+
+		            System.out.println(
+		                    "❌ Procurement comment menu/button not found for product index: "
+		                            + index
+		            );
+
+		            System.out.println(
+		                    "Error: " + e.getMessage()
+		            );
+		        }
+		    }
+
+		    // =========================================================
+		    // Final validation
+		    // =========================================================
+
+		    if (commentsAdded != 2) {
+
+		        throw new RuntimeException(
+		                "❌ Could add procurement comments to only "
+		                        + commentsAdded
+		                        + " products. Required: 2"
+		        );
+		    }
+
+		    System.out.println(
+		            "✅ Test case passed - procurement comments added to 2 products."
+		    );
+		}
+		
 /*public void addRandomProcurementComments() throws InterruptedException {
-
-    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-    JavascriptExecutor js = (JavascriptExecutor) driver;
-    Random random = new Random();
-
-    // ============================================================
-    // STEP 1: Find all product rows which have a More button
-    // ============================================================
-
-    List<WebElement> productRows = driver.findElements(
-            By.xpath("//tbody/tr[.//button[contains(@class,'dropdown-toggle')]]")
-    );
-
-    System.out.println("Total products with More button: " + productRows.size());
-
-    if (productRows.size() < 3) {
-        throw new RuntimeException(
-                "❌ Less than 3 products are available for Procurement Comments."
-        );
-    }
-
-    // ============================================================
-    // STEP 2: Randomly select 3 or 4 products
-    // ============================================================
-
-    int maxProducts = Math.min(3, productRows.size());
-
-    // Randomly choose either 3 or 4
-    int productsToUpdate = 3 + random.nextInt(2);
-
-    // If only 3 products available, select 3
-    productsToUpdate = Math.min(productsToUpdate, maxProducts);
-
-    System.out.println(
-            "======================================"
-    );
-
-    System.out.println(
-            "Products selected for Procurement Comments: "
-                    + productsToUpdate
-    );
-
-    System.out.println(
-            "======================================"
-    );
-
-    // ============================================================
-    // STEP 3: Generate unique random product indexes
-    // ============================================================
-
-    List<Integer> selectedIndexes = new ArrayList<>();
-
-    while (selectedIndexes.size() < productsToUpdate) {
-
-        int randomIndex = random.nextInt(productRows.size());
-
-        if (!selectedIndexes.contains(randomIndex)) {
-            selectedIndexes.add(randomIndex);
-        }
-    }
-
-    // ============================================================
-    // STEP 4: Process each randomly selected product
-    // ============================================================
-
-    for (int x = 0; x < selectedIndexes.size(); x++) {
-
-        int rowIndex = selectedIndexes.get(x);
-
-        try {
-
-            System.out.println("--------------------------------------");
-
-            // Re-find rows every time to avoid stale elements
-            productRows = driver.findElements(
-                    By.xpath(
-                            "//tbody/tr[.//button[contains(@class,'dropdown-toggle')]]"
-                    )
-            );
-
-            if (rowIndex >= productRows.size()) {
-
-                System.out.println(
-                        "⚠ Product row no longer available: "
-                                + (rowIndex + 1)
-                );
-
-                continue;
-            }
-
-            WebElement productRow = productRows.get(rowIndex);
-
-            // ====================================================
-            // Get Product Name
-            // ====================================================
-
-            String productName = "";
-
-            try {
-
-                productName = productRow
-                        .findElement(By.xpath("./td[4]"))
-                        .getText()
-                        .trim();
-
-            } catch (Exception e) {
-
-                productName = "Unknown Product";
-            }
-
-            System.out.println(
-                    "Processing Product: " + productName
-            );
-
-            // ====================================================
-            // Find More button ONLY inside current product row
-            // ====================================================
-
-            WebElement moreButton = productRow.findElement(
-                    By.xpath(
-                            ".//button[contains(@class,'dropdown-toggle')]"
-                    )
-            );
-
-            js.executeScript(
-                    "arguments[0].scrollIntoView({block:'center'});",
-                    moreButton
-            );
-
-            Thread.sleep(500);
-
-            moreButton.click();
-
-            System.out.println(
-                    "✅ More button clicked for: "
-                            + productName
-            );
-
-            // ====================================================
-            // Click Procurement Comments
-            // ====================================================
-
-            WebElement procurementComments = wait.until(
-                    ExpectedConditions.elementToBeClickable(
-                            By.xpath(
-                                    " //a[contains(normalize-space(),'Add/View/Edit ProcurementComment')]"
-                            )
-                    )
-            );
-
-            procurementComments.click();
-
-            System.out.println(
-                    "✅ Procurement Comments opened."
-            );
-
-            Thread.sleep(500);
-
-            // ====================================================
-            // Find Procurement Comments dropdown
-            // ====================================================
-
-            WebElement commentDropdown = wait.until(
-                    ExpectedConditions.visibilityOfElementLocated(
-                            By.xpath(
-                                    "//select[.//option[contains(normalize-space(),'Available In stock')]]"
-                            )
-                    )
-            );
-
-            // ====================================================
-            // Get all options
-            // ====================================================
-
-            Select selectComment = new Select(commentDropdown);
-
-            List<WebElement> options =
-                    selectComment.getOptions();
-
-            if (options.size() <= 1) {
-
-                throw new RuntimeException(
-                        "❌ No Procurement Comments available for: "
-                                + productName
-                );
-            }
-
-            // ====================================================
-            // Select random comment
-            // Skip first "Select" option
-            // ====================================================
-
-            int randomCommentIndex =
-                    1 + random.nextInt(options.size() - 1);
-
-            String selectedComment =
-                    options.get(randomCommentIndex)
-                            .getText()
-                            .trim();
-
-            selectComment.selectByIndex(randomCommentIndex);
-
-            System.out.println(
-                    "✅ Selected Procurement Comment: "
-                            + selectedComment
-            );
-
-            // ====================================================
-            // Click Save inside popup
-            // ====================================================
-
-            WebElement saveButton = wait.until(
-                    ExpectedConditions.elementToBeClickable(
-                            By.xpath(
-                                    "//button[normalize-space()='Save']"
-                            )
-                    )
-            );
-
-            saveButton.click();
-            
-
-            System.out.println(
-                    "✅ Procurement Comment saved for: "
-                            + productName
-            );
-            
-            Thread.sleep(1000);
-    	    driver.findElement(By.xpath("//button[normalize-space()='OK']")).click();
-
-            Thread.sleep(1000);
-            
-            
-
-        } catch (StaleElementReferenceException e) {
-
-            System.out.println(
-                    "⚠ Product row became stale. Skipping this product."
-            );
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "❌ Failed for product."
-            );
-
-            e.printStackTrace();
-        }
-    }
-
-    System.out.println(
-            "======================================"
-    );
-
-    System.out.println(
-            "✅ Procurement Comments process completed."
-    );
-
-    System.out.println(
-            "======================================"
-    );
-}*/
-
-public void addRandomProcurementComments() throws InterruptedException {
 
     WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     JavascriptExecutor js = (JavascriptExecutor) driver;
@@ -5394,10 +5621,9 @@ public void addRandomProcurementComments() throws InterruptedException {
                     "Error: " + e.getMessage()
             );
         }
-    }
-
-    
-}
+   }
+   
+} */
 
 //Request for Approval
 public void requestApprovalForRedProducts() throws InterruptedException {
@@ -5666,7 +5892,8 @@ private void changeStatus4(int rowIndex, String statusText) throws InterruptedEx
     // Final alert/confirmation close button
     WebElement closeButton = wait.until(
             ExpectedConditions.elementToBeClickable(
-                    By.xpath("//*[@id='react-confirm-alert']/div/div/div/div/button")));
+            		By.xpath("//button[normalize-space()='OK']")));
+//                    By.xpath("//*[@id='react-confirm-alert']/div/div/div/div/button")));
 
     closeButton.click();
 
@@ -5800,9 +6027,9 @@ Thread.sleep(1000);
 	         invoiceValueInput
 	 );
 
-	 System.out.println("✅ Supplier Unit Price: " + supplierUnitPrice);
-	 System.out.println("✅ Quantity: " + quantity);
-	 System.out.println("✅ Invoice Value Entered: " + invoiceValue);
+	 System.out.println("Supplier Unit Price Entered: " + supplierUnitPrice);
+	 System.out.println("LPO Rec Quantity: " + quantity);
+	 System.out.println("Total LPO Invoice Value: " + invoiceValue);
 	 
 	 
 	 
@@ -5863,6 +6090,10 @@ Thread.sleep(1000);
 
 	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
+	// Wait until page loader disappears
+    wait.until(ExpectedConditions.invisibilityOfElementLocated(
+          By.cssSelector(".fot-loader")));
+	
 	// Click correct row "More"
 	WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
 			By.xpath("//table//tbody//tr[" + rowIndex + "]//button[contains(@class,'dropdown-toggle')]")));
@@ -5889,6 +6120,7 @@ Thread.sleep(1000);
 		// Click correct row "More"
 		WebElement moreBtn = wait.until(ExpectedConditions.elementToBeClickable(
 				By.xpath("//table//tbody//tr//button[contains(@class,'dropdown-toggle')]")));
+		Thread.sleep(1000);
 		moreBtn.click();
 
 		// Click Change Status from SAME row

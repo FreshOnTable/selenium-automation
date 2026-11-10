@@ -32,9 +32,9 @@ Feature: LPO Module
 	Then User filters LPOs by seller name from table
 
 
-Scenario: Create FOC LPO
-Given User navigates to Create LPO page
-Then only FOC orders should be displayed with zero order margin
+ Scenario: Create FOC LPO
+  Given User navigates to Create LPO page
+  Then only FOC orders should be displayed with zero order margin
 
 
   Scenario Outline: Validate Approval Types 
@@ -50,7 +50,7 @@ Then only FOC orders should be displayed with zero order margin
       | Rejected            |
       | All                 |
   
-    
+    @Lpo_01
   Scenario Outline: Change seller
   Given User is on Create LPO page
   When User select random products
@@ -58,8 +58,8 @@ Then only FOC orders should be displayed with zero order margin
   And User selects a different seller and submits
   Then Seller should be updated successfully in LPO page
   
-    
-  Scenario: Add more products 2nd Page
+   @Lpo_02  
+  Scenario: Add more products in 2nd Page
   Given User is on Create LPO page
   When User creates LPO with random product qty and delivery hub
   Then User selects random delivery hub
@@ -97,7 +97,7 @@ Scenario: Add more batches for QC rejection
    When User completes LPO with zero received qty
    And User changes any 1 LPO to the "Partially Fulfilled And Awaiting For Approval" Lpo status 
    
-    
+   @Lpo_03
    Scenario: Edit LPO 
    Given User is on Create LPO page
    When Select some existing products
@@ -106,7 +106,7 @@ Scenario: Add more batches for QC rejection
    Then Edit the Lpo with random qty
    And Save the changes
    
-    
+    @Lpo_04
    Scenario: Add procurement comments
    Given User is on Create LPO page
    When Click more button for available products in Lpo page
@@ -121,7 +121,7 @@ Scenario: Add more batches for QC rejection
    And Click more button and send approval request 
    Then Confirm the approval request sent  
    
-    @Lpo_01
+    
    Scenario: Lpo stock validation
    Given User is on Create LPO page
    When Select some existing products in lpo page

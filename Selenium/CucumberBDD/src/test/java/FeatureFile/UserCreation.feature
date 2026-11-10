@@ -72,9 +72,40 @@ Feature: User Creation
     @UpdateAddress
     Scenario: Add new Address details for Org
     Given User navigates to the Organization module
-    When Select one organisation and click Manage Address option
+    When Select existing organisation and click Manage Address option
     Then Add New Address details for organisation
     And Validate the updated address details
+    
+    
+    @AddUser
+    Scenario: Create new user for an Existing Organisation    
+    Given User navigates to the Administrator Module
+ 		And User clicks on the Create Organization option
+    Then The user selects an organization type from the dropdown
+    And Selects "Business" as the organization type
+    And Fills in all mandatory fields for Organization Details
+    Then Fills in all mandatory fields for Organization Admin Details
+    And Fills in all necessary address details
+   	And Uploads all mandatory documents
+    And Enables all communication channels   
+    And Provides additional required information
+    Then Finally once users clicks submit button users will create successfully
+    And After that User can change the status for Initiated to Active for Business Account
+    Then Validate the user is created successfully   
+    When User select busines name 
+    And User fills all mandotory fields required for user creation
+    And User clicks submit button to save the changes and verify the details 
+    
+    @CreateNodeUser
+    Scenario: Create node users/Internal user for Assign node user
+    Given User navigate to the Organization module
+    When User clicks on the Add User option
+    Then User needs to select the Tenant Admin as option
+    And User fills all mandotory fields 
+    Then User need to select the required user position
+   
+    
+    
     
     
     

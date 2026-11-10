@@ -225,9 +225,7 @@ public void enterOrgName2() throws InterruptedException {
 
 		Thread.sleep(1000);
 }
-	
-	
-		
+			
 		public void enterBusinessFirstName(String firstName) {
 
 		    WebElement firstNameField =
@@ -235,9 +233,7 @@ public void enterOrgName2() throws InterruptedException {
 
 		    firstNameField.clear();
 		    firstNameField.sendKeys(firstName);
-		}
-
-	
+		}	
 	
 		public void enterBusinessLastName(String lastName) {
 
@@ -247,6 +243,20 @@ public void enterOrgName2() throws InterruptedException {
 		    lastNameField.clear();
 		    lastNameField.sendKeys(lastName);
 		}
+		
+		
+		public void enterBusinessFirstName1(String firstName) {
+		    WebElement firstNameField = driver.findElement(By.name("first_name"));
+		    firstNameField.clear();
+		    firstNameField.sendKeys(firstName);
+		}
+
+		public void enterBusinessLastName1(String lastName) {
+		    WebElement lastNameField = driver.findElement(By.name("last_name"));
+		    lastNameField.clear();
+		    lastNameField.sendKeys(lastName);
+		}
+		
 
 public void enterTRN(String trn) {
 
@@ -351,13 +361,13 @@ public void selectCategory() throws InterruptedException {
 	
 	public void mobileNo() throws InterruptedException {
 		
-		By clicksubmit = By.xpath("//button[contains(text(),'Submit')]");
-		Thread.sleep(1000);
-		driver.findElement(clicksubmit).click();
-
-		driver.findElement(By.xpath("//button[contains(text(),'OK')]")).click();
-
-		System.out.println("Status Failed: " + "Check if the Organization can be created without mobile No(mandatory)");
+//		By clicksubmit = By.xpath("//button[contains(text(),'Submit')]");
+//		Thread.sleep(1000);
+//		driver.findElement(clicksubmit).click();
+//
+//		driver.findElement(By.xpath("//button[contains(text(),'OK')]")).click();
+//
+//		System.out.println("Status Failed: " + "Check if the Organization can be created without mobile No(mandatory)");
 
 		Thread.sleep(2000);
 
@@ -1039,12 +1049,9 @@ public void UserNametype() throws InterruptedException {
 	    WebElement randomZone = zoneOptions.get(randomIndex);
 
 	    String zoneName = randomZone.getText().trim();
-
-	    System.out.println("========================================");
-	    System.out.println("Total Zone options: " + zoneOptions.size());
+	    
 	    System.out.println("Random Zone selected: " + zoneName);
-	    System.out.println("========================================");
-
+	   
 	    randomZone.click();
 
 	    Thread.sleep(1000);
@@ -1460,53 +1467,53 @@ public void selectRandomOrganisationTag() {
 	}
 
 
-	public void selectRandomSalesUser() throws InterruptedException {
-
-	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-	    Random random = new Random();
-
-	    WebElement salesUserElement = wait.until(
-	        ExpectedConditions.presenceOfElementLocated(
-	            By.name("sales_user")
-	        )
-	    );
-
-	    Select salesUser = new Select(salesUserElement);
-
-	    List<WebElement> options = salesUser.getOptions();
-
-	    List<WebElement> validOptions = new ArrayList<>();
-
-	    for (WebElement option : options) {
-
-	        String text = option.getText().trim();
-
-	        if (!text.isEmpty()
-	                && !text.equalsIgnoreCase("Select")
-	                && !text.equalsIgnoreCase("Sales User")) {
-
-	            validOptions.add(option);
-	        }
-	    }
-
-	    if (validOptions.isEmpty()) {
-	        throw new RuntimeException(
-	            "No Sales User options available"
-	        );
-	    }
-
-	    WebElement randomOption =
-	        validOptions.get(random.nextInt(validOptions.size()));
-
-	    String selectedSalesUser =
-	        randomOption.getText().trim();
-
-	    salesUser.selectByVisibleText(selectedSalesUser);
-
-	    System.out.println(
-	        "Random Sales User selected: "
-	        + selectedSalesUser
-	    );
+//	public void selectRandomSalesUser() throws InterruptedException {
+//
+//	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+//	    Random random = new Random();
+//
+//	    WebElement salesUserElement = wait.until(
+//	        ExpectedConditions.presenceOfElementLocated(
+//	            By.name("sales_user")
+//	        )
+//	    );
+//
+//	    Select salesUser = new Select(salesUserElement);
+//
+//	    List<WebElement> options = salesUser.getOptions();
+//
+//	    List<WebElement> validOptions = new ArrayList<>();
+//
+//	    for (WebElement option : options) {
+//
+//	        String text = option.getText().trim();
+//
+//	        if (!text.isEmpty()
+//	                && !text.equalsIgnoreCase("Select")
+//	                && !text.equalsIgnoreCase("Sales User")) {
+//
+//	            validOptions.add(option);
+//	        }
+//	    }
+//
+//	    if (validOptions.isEmpty()) {
+//	        throw new RuntimeException(
+//	            "No Sales User options available"
+//	        );
+//	    }
+//
+//	    WebElement randomOption =
+//	        validOptions.get(random.nextInt(validOptions.size()));
+//
+//	    String selectedSalesUser =
+//	        randomOption.getText().trim();
+//
+//	    salesUser.selectByVisibleText(selectedSalesUser);
+//
+//	    System.out.println(
+//	        "Random Sales User selected: "
+//	        + selectedSalesUser
+//	    );
 	    
 //	    By clicksubmit = By.xpath("//button[contains(text(),'Submit')]");
 //		Thread.sleep(1000);
@@ -1516,9 +1523,75 @@ public void selectRandomOrganisationTag() {
 //
 //		driver.findElement(By.xpath("//button[contains(text(),'OK')]")).click();
 		
-	}
+//	}
 	
-	public void submitForm() throws InterruptedException {
+
+public void selectRandomSalesUser() {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+    Random random = new Random();
+
+    // 1. Wait for Sales User dropdown
+    wait.until(ExpectedConditions.presenceOfElementLocated(
+            By.name("sales_user")));
+
+    // 2. Get available Sales User options
+    List<String[]> validOptions = wait.until(d -> {
+        try {
+            Select salesUser = new Select(
+                    d.findElement(By.name("sales_user")));
+
+            List<String[]> optionsList = new ArrayList<>();
+
+            for (WebElement option : salesUser.getOptions()) {
+                String value = option.getAttribute("value");
+                String text = option.getText().trim();
+
+                // Exclude only empty options and placeholders
+                if (value != null && !value.isBlank()
+                        && !text.isBlank()
+                        && !text.equalsIgnoreCase("Select")
+                        && !text.equalsIgnoreCase("Sales User")) {
+
+                    optionsList.add(new String[] { value, text });
+                }
+            }
+
+            return optionsList.isEmpty() ? null : optionsList;
+
+        } catch (StaleElementReferenceException e) {
+            return null;
+        }
+    });
+
+    if (validOptions == null || validOptions.isEmpty()) {
+        throw new IllegalStateException(
+                "No Sales User options available in the dropdown.");
+    }
+
+    // 3. Choose any one Sales User randomly
+    String[] selectedOption = validOptions.get(
+            random.nextInt(validOptions.size()));
+
+    String selectedValue = selectedOption[0];
+    String selectedName = selectedOption[1];
+
+    // 4. Select the chosen user by value
+    wait.until(d -> {
+        try {
+            new Select(d.findElement(By.name("sales_user")))
+                    .selectByValue(selectedValue);
+            return true;
+        } catch (StaleElementReferenceException e) {
+            return false;
+        }
+    });
+
+    System.out.println("Random Sales User selected: " + selectedName);
+}
+
+	
+	public void clickSubmitForm() throws InterruptedException {
 		
 		WebDriverWait wait =
 	            new WebDriverWait(driver, Duration.ofSeconds(10));
@@ -1728,7 +1801,7 @@ public void orgTypeConsumer() throws InterruptedException {
     }
 }
 
-public void selectBusinessOption() throws InterruptedException {
+public void selectBusinessType() throws InterruptedException {
 //        List<String> incompleteOrderIds) throws InterruptedException {
 
     WebDriverWait wait =
@@ -2115,6 +2188,40 @@ public void searchOrganization(String organizationName)
     WebElement searchInput = wait.until(
             ExpectedConditions.elementToBeClickable(
                     By.xpath("//input[@type='text']")
+            )
+    );
+
+    searchInput.clear();
+    searchInput.sendKeys(organizationName);
+    Thread.sleep(1000);
+    searchInput.sendKeys(Keys.ENTER);
+
+    System.out.println(
+            "Searching for organization: " + organizationName
+    );
+}
+
+public void searchOrganizationName1(String organizationName)
+        throws InterruptedException {
+	
+
+    WebDriverWait wait =
+            new WebDriverWait(driver, Duration.ofSeconds(20));
+    
+    WebElement orderIdFilter = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    By.xpath(
+                            "//tr[@class='table-light']/th[3]/div[2]"
+                    )
+            )
+    );
+
+   Thread.sleep(1000);
+    orderIdFilter.click();
+
+    WebElement searchInput = wait.until(
+            ExpectedConditions.elementToBeClickable(
+                    By.xpath("(//input[@type='text'])[6]")
             )
     );
 
@@ -3012,10 +3119,230 @@ public void clickAddBtn() throws InterruptedException {
     WebElement clickAdd = wait.until(
             ExpectedConditions.elementToBeClickable(By.xpath("//button[normalize-space()='Add']")));
             clickAdd.click();
-Thread.sleep(1000);
+      Thread.sleep(1000);
             WebElement clickOK = wait.until(
                     ExpectedConditions.elementToBeClickable(By.xpath("//button[normalize-space()='OK']")));
                     clickOK.click();
 }
+
+//Add User
+
+public void clickUsersMenue() throws InterruptedException {
+
+    WebDriverWait wait = new WebDriverWait(
+        driver, Duration.ofSeconds(15)
+    );
+
+    // Step 1: Locate the Administrator menu
+    By administratorMenu = By.xpath(
+        "//*[normalize-space()='Administrator']"
+    );
+
+    WebElement admin = wait.until(
+        ExpectedConditions.elementToBeClickable(administratorMenu)
+    );
+
+    // Step 2: Expand Administrator only if Organizations is not visible
+    By organizationsOption = By.xpath(
+        "//*[normalize-space()='Users']"
+    );
+
+    boolean organizationsVisible = driver.findElements(organizationsOption)
+            .stream()
+            .anyMatch(WebElement::isDisplayed);
+
+    if (!organizationsVisible) {
+        admin.click();
+    }
+
+    // Step 3: Wait for Organizations and click it
+    WebElement organizations = wait.until(
+        ExpectedConditions.elementToBeClickable(organizationsOption)
+    );
+    
+    Thread.sleep(1000); 
+    organizations.click();
+
+    System.out.println("Successfully clicked Organizations.");
 }
 
+public void clickAddUser() throws InterruptedException {
+	Thread.sleep(2000);
+	driver.findElement(By.xpath("//button[normalize-space()='+ Add User']")).click();
+}
+
+public void selectOrganisation() throws InterruptedException {
+	Thread.sleep(2000);
+	driver.findElement(By.xpath("(//input[@class='fot-formControl empty empty'])[1]")).click();
+}
+
+public void clickOnOrganisationName() throws InterruptedException {
+    Thread.sleep(2000);
+    driver.findElement(By.xpath("//div[@class='custom-grid-body']")).click();
+}
+
+public void assignType() throws InterruptedException {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+    // Wait for the Country dropdown
+    WebElement countryDropdown = wait.until(
+        ExpectedConditions.elementToBeClickable(
+            By.xpath("(//select[contains(@class,'fot-formControl custom-select empty')])[1]")
+        )
+    );
+
+    // Select UAE by visible text
+    Select countrySelect = new Select(countryDropdown);
+    countrySelect.selectByVisibleText("Assign to Node");
+}
+
+public void selectUsernameType() {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+    WebElement usernameTypeElement = wait.until(
+        ExpectedConditions.elementToBeClickable(By.name("uname_type"))
+    );
+
+    Select usernameType = new Select(usernameTypeElement);
+
+    usernameType.selectByVisibleText("Mobile Number");
+
+    System.out.println("Selected Username Type: "
+        + usernameType.getFirstSelectedOption().getText().trim());
+}
+
+public void selectNode() throws InterruptedException {
+    Thread.sleep(2000);
+    driver.findElement(By.xpath("//input[contains(@class,'fot-formControl empty empty')]")).click();
+    Thread.sleep(2000);
+    driver.findElement(By.xpath("//div[@class='custom-grid-body']")).click();
+
+}
+
+// Create node user
+public void selectOrgName() throws InterruptedException {
+	Thread.sleep(2000);
+	driver.findElement(By.xpath("(//input[@class='fot-formControl empty empty'])[1]")).click();
+	Thread.sleep(2000);
+    driver.findElement(By.xpath("//div[@class='custom-grid-body']")).click();
+}
+//public void selectNodeType() throws InterruptedException {
+//    Thread.sleep(2000);
+//    driver.findElement(By.xpath("//input[contains(@class,'fot-formControl empty empty')]")).click();
+//    Thread.sleep(2000);
+//    driver.findElement(By.xpath("//*[@class='MuiSvgIcon-root MuiSvgIcon-fontSizeMedium expand-btn css-vubbuv']")).click();
+//    Thread.sleep(2000);
+//    driver.findElement(By.xpath("//div[@class='custom-grid-body']")).click();
+//
+//}
+	
+/*public void selectUserPosition(String positionName) {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+    // Step 1: Open the Select Node popup
+    WebElement selectNodeField = wait.until(
+        ExpectedConditions.elementToBeClickable(
+            By.xpath("//input[contains(@class,'fot-formControl empty empty')]")
+        )
+    );
+    selectNodeField.click();
+
+    // Step 2: Wait for the popup row containing Tenant Admin
+    By tenantAdminRow = By.xpath(
+        "//tr[.//*[normalize-space()='Tenant Admin']]"
+    );
+
+    WebElement row = wait.until(
+        ExpectedConditions.visibilityOfElementLocated(tenantAdminRow)
+    );
+
+    // Step 3: Click the first expand arrow in the Tenant Admin row
+    WebElement expandArrow = row.findElement(
+        By.xpath("//*[@class='MuiSvgIcon-root MuiSvgIcon-fontSizeMedium expand-btn css-vubbuv']")
+    );
+
+    wait.until(
+        ExpectedConditions.elementToBeClickable(expandArrow)
+    ).click();
+
+
+    // Step 4: Wait for the requested position to appear
+    By requestedPosition = By.xpath(
+        "//tr[.//*[normalize-space()='" + positionName + "']]"
+    );
+
+    WebElement positionRow = wait.until(
+        ExpectedConditions.visibilityOfElementLocated(requestedPosition)
+    );
+
+    // Step 5: Click the requested position (e.g., Finance)
+    wait.until(
+        ExpectedConditions.elementToBeClickable(positionRow)
+    ).click();
+
+    System.out.println("Selected Position: " + positionName);
+}*/
+
+public void selectUserPosition(String positionName) {
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+    // 1. Open Select Node popup
+    WebElement selectNodeField = wait.until(
+        ExpectedConditions.elementToBeClickable(
+            By.xpath("//input[contains(@class,'fot-formControl empty empty')]")
+        )
+    );
+    selectNodeField.click();
+
+    // 2. Expand Tenant Admin
+    By tenantAdminRow = By.xpath(
+        "//tr[.//*[normalize-space()='Tenant Admin']]"
+    );
+
+    WebElement row = wait.until(
+        ExpectedConditions.visibilityOfElementLocated(tenantAdminRow)
+    );
+
+    // Use your confirmed working expand-arrow locator here
+    WebElement expandArrow = row.findElement(
+        By.xpath(".//*[contains(@class,'expand') or " +
+                 "contains(@class,'arrow') or " +
+                 "contains(@class,'e-icon')][1]")
+    );
+
+    expandArrow.click();
+
+    // 3. Click the exact requested position name
+    By positionCell = By.xpath(
+        "//tr/td[normalize-space()='" + positionName + "']"
+    );
+
+    wait.until(
+        ExpectedConditions.elementToBeClickable(positionCell)
+    ).click();
+
+    // 4. Verify the Select Node field reflects the selection
+//    By selectedNodeField = By.xpath(
+//        "(//input[contains(@class,'fot-formControl populate populate')])[2]"
+//    );
+//
+//    String actualValue = wait.until(
+//        ExpectedConditions.visibilityOfElementLocated(selectedNodeField)
+//    ).getText().trim();
+//
+    System.out.println("Requested Position: " + positionName);
+//    System.out.println("Displayed Select Node: " + actualValue);
+//
+//    if (!actualValue.equalsIgnoreCase(positionName)) {
+//        throw new AssertionError(
+//            "Position selection mismatch. Expected: " + positionName
+//            + ", but UI displays: " + actualValue
+//        );
+//    }
+}
+
+}

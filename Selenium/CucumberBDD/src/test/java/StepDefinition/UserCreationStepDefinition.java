@@ -175,7 +175,7 @@ public class UserCreationStepDefinition {
 	public void finally_once_users_clicks_submit_button_users_will_create_successfully() throws InterruptedException {
 		UserCreation userCreation = testsetup.pageObjectManager.getUserCreation();
 		Thread.sleep(1000);
-	    userCreation.submitForm();
+	    userCreation.clickSubmitForm();
 	}
 	@And("After that User can change the status for Initiated to Active for Business Account")
 	public void ater_that_user_can_change_the_status_for_initiated_to_active_for_business_account() throws InterruptedException {
@@ -185,7 +185,7 @@ public class UserCreationStepDefinition {
 		Thread.sleep(1000);
 		userCreation.clickOrganisationMenue();
 		Thread.sleep(2000);
-		userCreation.selectBusinessOption();
+		userCreation.selectBusinessType();
 		Thread.sleep(1000);
 		
 		String organizationGetName=Global.getGeneratedOrgName();
@@ -353,7 +353,7 @@ public class UserCreationStepDefinition {
 		Thread.sleep(1000);
 		userCreation.clickOrganisationMenue();
 		Thread.sleep(2000);
-		userCreation.selectBusinessOption();
+		userCreation.selectBusinessType();
 		Thread.sleep(1000);
 		
 		
@@ -417,8 +417,8 @@ public class UserCreationStepDefinition {
 	
 // update new address
 	
-	@When("Select one organisation and click Manage Address option")
-	public void select_one_organisation_and_click_manage_address_option() throws InterruptedException {
+	@When("Select existing organisation and click Manage Address option")
+	public void select_existing_organisation_and_click_manage_address_option() throws InterruptedException {
 		UserCreation userCreation = testsetup.pageObjectManager.getUserCreation(); 
 		userCreation.click_AddNewAddress();
 	}
@@ -455,7 +455,143 @@ public class UserCreationStepDefinition {
 		UserCreation userCreation = testsetup.pageObjectManager.getUserCreation(); 
 		userCreation.clickAddBtn();
 	}
+	
+	
+//Add User
+	
+	@When("User select busines name")
+	public void user_select_busines_name() throws InterruptedException {
+		UserCreation userCreation = testsetup.pageObjectManager.getUserCreation();		
 		
+		userCreation.clickAddUser();
+		Thread.sleep(1000);		
+		userCreation.selectOrganisation();
+		Thread.sleep(2000);
+		userCreation.selectBusinessType();
+		
+		String organizationGetName=Global.getGeneratedOrgName();
+		Thread.sleep(2000);
+	    userCreation.searchOrganizationName1(organizationGetName);
+	    Thread.sleep(1000);
+	    userCreation.clickOnOrganisationName();
+	}
+	@When("User fills all mandotory fields required for user creation")
+	public void user_fills_all_mandotory_fields_required_for_user_creation() throws InterruptedException {
+		UserCreation userCreation = testsetup.pageObjectManager.getUserCreation();
+		
+		businessFirstName =
+	            TestDataGenerator.generateBusinessFirstName();
+
+	    businessLastName =
+	            TestDataGenerator.generateBusinessLastName();
+	    
+		userCreation.enterBusinessFirstName(businessFirstName);
+	    userCreation.enterBusinessLastName(businessLastName);
+
+
+       mobileNumber =
+	            TestDataGenerator.generateMobileNumber();
+
+	    email =
+	            TestDataGenerator.generateEmail();
+
+	    System.out.println("Mobile Number : " + mobileNumber);
+	    System.out.println("Email        : " + email);
+	    
+	    userCreation.entermobileNo(mobileNumber);
+	    userCreation.enterEmail(email);
+
+Thread.sleep(2000);
+		userCreation.selectUsernameType();
+		userCreation.Password();
+		userCreation.confirmPassword();
+	}
+	@When("User clicks submit button to save the changes and verify the details")
+	public void user_clicks_submit_button_to_save_the_changes_and_verify_the_details() throws InterruptedException {
+		UserCreation userCreation = testsetup.pageObjectManager.getUserCreation();
+		userCreation.assignType();
+		userCreation.selectNode();
+		Thread.sleep(1000);
+	    userCreation.clickSubmitForm();
+	}
+	
+//Create Node User	
+	
+	@Given("User navigate to the Organization module")
+	public void user_navigates_to_the_organization_module() throws InterruptedException {
+		UserCreation userCreation = testsetup.pageObjectManager.getUserCreation();
+		
+		Thread.sleep(1000);
+		userCreation.clickgrid();
+		Thread.sleep(1000);
+		userCreation.clickUsersMenue();
+	}
+		
+		@When("User clicks on the Add User option")
+		public void user_clicks_on_the_add_user_option() throws InterruptedException {
+			UserCreation userCreation = testsetup.pageObjectManager.getUserCreation();
+			
+			userCreation.clickAddUser();
+			Thread.sleep(1000);	
+			userCreation.selectOrgName();
+		}
+		@Then("User needs to select the Tenant Admin as option")
+		public void user_needs_to_select_the_tenant_admin_as_option() {
+			UserCreation userCreation = testsetup.pageObjectManager.getUserCreation(); 
+		}
+		
+		@When("User fills all mandotory fields")
+		public void user_fills_all_mandotory_fields() throws InterruptedException {
+			UserCreation userCreation = testsetup.pageObjectManager.getUserCreation();
+			
+
+	String userType = "Finance"; // Change to Delivery or Sales as required
+
+	String firstName = TestDataGenerator.generateBusinessFirstName1(userType);
+	String lastName = TestDataGenerator.generateBusinessLastName1(userType);
+
+	userCreation.enterBusinessFirstName1(firstName);
+	userCreation.enterBusinessLastName1(lastName);
+
+	System.out.println("Generated First Name: " + firstName);
+	System.out.println("Generated Last Name: " + lastName);
+
+
+	 mobileNumber =
+		            TestDataGenerator.generateMobileNumber();
+
+		    email =
+		            TestDataGenerator.generateEmail();
+
+		    System.out.println("Mobile Number : " + mobileNumber);
+		    System.out.println("Email        : " + email);
+		    
+		    userCreation.entermobileNo(mobileNumber);
+		    userCreation.enterEmail(email);
+
+	Thread.sleep(2000);
+			userCreation.selectUsernameType();
+			userCreation.Password();
+			userCreation.confirmPassword();
+		}
+
+@When("User need to select the required user position")
+public void selectRequiredUserPosition() throws InterruptedException {
+	UserCreation userCreation = testsetup.pageObjectManager.getUserCreation(); 
+	Thread.sleep(1000);
+	userCreation.assignType();
+		Thread.sleep(1000);
+    // For a Finance user
+    userCreation.selectUserPosition("Finance");
+
+    Thread.sleep(1000);
+    userCreation.clickSubmitForm();
 }
+
+		
+	}
+
+
+
 
 

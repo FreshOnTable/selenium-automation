@@ -18,7 +18,7 @@ Feature: Products
     Then Click submit button validate all mandatory fields and the product is created successfully.
     Given user to click on the view products grid
     When after creating a product its in under initiated status
-    Then select initiated status option in the status filtration  
+#   Then select initiated status option in the status filtration  
     And click change status option in more button
     And change the product status as active
     Then click submit button
