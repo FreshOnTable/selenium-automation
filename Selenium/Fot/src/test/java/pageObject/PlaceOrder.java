@@ -75,6 +75,8 @@ public class PlaceOrder {
 
 	public void selectProduct_And_Quantity() throws Exception {
 
+		WebDriverWait wait1 = new WebDriverWait(driver, Duration.ofSeconds(10));
+		
 		List<WebElement> products = driver.findElements(
 				By.xpath("//input[contains(@class,'grid-checkbox-input') and @type='checkbox' and not(@disabled)]"));
 
