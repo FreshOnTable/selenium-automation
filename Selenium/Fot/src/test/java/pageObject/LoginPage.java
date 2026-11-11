@@ -14,7 +14,7 @@ public class LoginPage {
 	
 	    private By username = By.xpath("//input[@name='userName']");
 	    private By password = By.xpath("//input[@type='password']");
-	    private By loginBtn = By.xpath("//button[text()='Login']");
+	    private By loginBtn = By.xpath("//span[text()='Sign in']");
 	   
 
 	    public void enterUsername(String user) {
