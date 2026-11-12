@@ -1,11 +1,13 @@
 package pageObject;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -72,110 +74,95 @@ public class PlaceOrder {
 		
 	}
 
+	private static final By ROWS =
+	        By.xpath("//tbody//tr[.//input[contains(@class,'grid-checkbox-input')]]");
+	private static final By CHECKBOX =
+	        By.xpath(".//input[contains(@class,'grid-checkbox-input')]");
+	private static final int PRODUCT_ID_COL = 2;
+	private static final int QTY_COL = 10;   // Quantity column; update if columns change
 
-	public void selectProduct_And_Quantity() throws Exception {
+	public void selectProduct_And_Quantity() {
+	    int count = 2;
+	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+	    wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(ROWS, 0));
 
-		WebDriverWait wait1 = new WebDriverWait(driver, Duration.ofSeconds(10));
-		
-		List<WebElement> products = driver.findElements(
-				By.xpath("//input[contains(@class,'grid-checkbox-input') and @type='checkbox' and not(@disabled)]"));
-
-	    int numberOfProductsToSelect = 2;
-	    Set<Integer> randomIndexes = new HashSet<>();
-
-	    int maxSelectable = Math.min(numberOfProductsToSelect, products.size());
-	    Random rand = new Random();
-
-	    // 2. Choose unique random indexes
-	    while (randomIndexes.size() < maxSelectable) {
-	        int index = rand.nextInt(products.size() -1) + 1; // fixed off-by-one
-	        WebElement checkbox = products.get(index);
-
-	        if (checkbox.isDisplayed() && checkbox.isEnabled() && !checkbox.isSelected()) {
-	            randomIndexes.add(index);
+	    // 1. Snapshot IDs of rows that can be selected
+	    List<String> eligibleIds = new ArrayList<>();
+	    for (WebElement row : driver.findElements(ROWS)) {
+	        WebElement cb = row.findElement(CHECKBOX);
+	        if (cb.isEnabled() && !cb.isSelected()) {
+	            eligibleIds.add(row.findElement(By.xpath("./td[" + PRODUCT_ID_COL + "]")).getText().trim());
 	        }
 	    }
+	    if (eligibleIds.size() < count) {
+	        throw new IllegalStateException("Only " + eligibleIds.size() + " selectable products found");
+	    }
 
+	    // 2. Unique random picks, no loop that can hang
+	    Collections.shuffle(eligibleIds);
+	    List<String> picked = new ArrayList<>(eligibleIds.subList(0, count));
+
+	    // 3. Select and set quantity
+	    Random rand = new Random();
+	    for (String id : picked) {
+	        String qty = String.valueOf(rand.nextInt(10) + 1);
+	        selectRowAndSetQty(id, qty, wait);
+	        System.out.println("Product " + id + " -> Qty " + qty);
+	    	    
+	    }
+	   
+	}
+
+	private void selectRowAndSetQty(String productId, String qty, WebDriverWait wait) {
+	    By rowBy = By.xpath("//tbody//tr[td[" + PRODUCT_ID_COL + "][normalize-space()='" + productId + "']]");
+	    By qtyBy = By.xpath("./td[" + QTY_COL + "]//input");
 	    JavascriptExecutor js = (JavascriptExecutor) driver;
 
-	    for (int index : randomIndexes) {
-
-	        WebElement checkbox = products.get(index);
-
-	        // Wait until clickable
+	    for (int attempt = 1; attempt <= 3; attempt++) {
 	        try {
-	            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-	            wait.until(ExpectedConditions.elementToBeClickable(checkbox));
-	            checkbox.click();
-	        } catch (Exception e) {
-	            // Fallback to JS click
-	            js.executeScript("arguments[0].click();", checkbox);
-	        }
+	            WebElement row = wait.until(ExpectedConditions.presenceOfElementLocated(rowBy));
+	            WebElement cb = row.findElement(CHECKBOX);
 
-	        // Short delay for row to become interactive
-	        Thread.sleep(200);
+	            js.executeScript("arguments[0].scrollIntoView({block:'nearest', inline:'nearest'});", cb);
+	            if (!cb.isSelected()) {
+	                try {
+	                    wait.until(ExpectedConditions.elementToBeClickable(cb)).click();
+	                } catch (ElementClickInterceptedException e) {
+	                    js.executeScript("arguments[0].click();", cb);
+	                }
+	            }
 
-	        // Find row and quantity input
-	        WebElement row = checkbox.findElement(By.xpath("./ancestor::tr"));
-	        WebElement qtyInput = row.findElement(By.xpath(".//td[10]//input"));
-	        
-	        Thread.sleep(1500);
+	            // wait for the REAL state, re-finding the row each time
+	            wait.until(d -> d.findElement(rowBy).findElement(CHECKBOX).isSelected());
 
-			Random rand1 = new Random();
+	            WebElement qtyInput = wait.until(d -> {
+	                WebElement e = d.findElement(rowBy).findElement(qtyBy);
+	                return e.isEnabled() ? e : null;
+	            });
 
-			String qty;
-			int whole = rand1.nextInt(10) + 1;
-			qty = String.valueOf(whole);
+	            qtyInput.click();
+	            qtyInput.sendKeys(Keys.chord(Keys.CONTROL, "a"), qty);
+	            qtyInput.sendKeys(Keys.TAB);   // real blur, triggers recalculation
 
-			Thread.sleep(1500);
-			updateQty(driver, qtyInput, qty);
-			System.out.println("Row " + index + " → Qty updated to " + qty);
-		}
+	            // verify the app accepted the value
+	            wait.until(d -> {
+	                String v = d.findElement(rowBy).findElement(qtyBy).getAttribute("value");
+	                try { return Double.parseDouble(v) == Double.parseDouble(qty); }
+	                catch (Exception ex) { return false; }
+	            });
+	            return;
+
+			} catch (Exception e) {
+				if (attempt == 3) {
+					throw new AssertionError("Failed to select product " + productId + " / set qty " + qty, e);
+				}
+				// else retry
+			}
+	    }
 	}
-
-	public void updateQty(WebDriver driver, WebElement qtyInput, String qty) throws InterruptedException {
-	    JavascriptExecutor js = (JavascriptExecutor) driver;
-
-	    	Thread.sleep(500);
-
-	    	qtyInput.click();
-	    	
-	    	try {
-	    	    qtyInput.click();
-	    	} catch (ElementClickInterceptedException e) {
-	    	    js.executeScript("arguments[0].click();", qtyInput);
-	    	}
-
-	    // Clear existing value
-	    qtyInput.sendKeys(Keys.chord(Keys.CONTROL, "a"));
-	    Thread.sleep(100);
-	    qtyInput.sendKeys(Keys.DELETE);
-	    Thread.sleep(100);
-
-	    // Enter new value
-	    qtyInput.sendKeys(qty);
-	    Thread.sleep(1000);
-
-	    // Fire events to ensure JS frameworks detect change
-	    js.executeScript("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", qtyInput);
-	    js.executeScript("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", qtyInput);
-	    js.executeScript("arguments[0].dispatchEvent(new Event('blur', { bubbles: true }));", qtyInput);
-	    js.executeScript("arguments[0].dispatchEvent(new Event('focusout', { bubbles: true }));", qtyInput);
-
-	    // Optionally click outside the input to trigger recalculation
-	    js.executeScript("document.activeElement.blur();");
-	    
-	    Thread.sleep(300); // wait for page to register change
-
-	    // Extra safety: click on the row or checkbox of next product
-	    // WebElement nextRowCheckbox = driver.findElement(By.xpath("//tr[2]//input[@type='checkbox']"));
-	    // nextRowCheckbox.click();
-	}
-
-
-
 	
-	public void LPOnumber() {
+	public void LPOnumber() throws InterruptedException {
+		Thread.sleep(2000);
 		String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 		String lpoNum = "Test " + timestamp;
 			WebElement LPONumberField = driver.findElement(By.name("lpo_number"));
@@ -183,6 +170,7 @@ public class PlaceOrder {
 	}
 	
 	public void paymentTerms() throws InterruptedException {
+		Thread.sleep(2000);
 		WebElement paymentDropdownField = driver.findElement(By.name("payment_method"));
 
 		WebElement dropdownElement = driver.findElement(By.name("payment_method"));
@@ -300,7 +288,7 @@ public class PlaceOrder {
 	}
 	
 	public void placeOrder() throws InterruptedException {
-
+		Thread.sleep(2000);
 	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
 	    By reviewOrderBtn = By.xpath("//button[text()='Review Order']");
