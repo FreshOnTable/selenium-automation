@@ -27,7 +27,7 @@ public class SetupClass {
             WebDriverManager.chromedriver().setup();
 
             ChromeOptions options = new ChromeOptions();
-//           options.addArguments("--incognito");
+           options.addArguments("--incognito");
             options.addArguments("--start-maximized");
             options.addArguments("--disable-notifications");
 

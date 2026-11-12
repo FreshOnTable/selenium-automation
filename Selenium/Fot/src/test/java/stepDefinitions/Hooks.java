@@ -42,7 +42,7 @@ public class Hooks {
             base.pageObjectManager.getLoginPage()
                 .enterUsername("UAEADMIN");
             base.pageObjectManager.getLoginPage()
-                .enterPassword("Admin@1234");
+                .enterPassword("Admin@4321");
             base.pageObjectManager.getLoginPage()
                 .clickLoginButton();
 

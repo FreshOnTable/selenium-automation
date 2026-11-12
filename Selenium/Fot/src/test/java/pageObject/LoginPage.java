@@ -14,14 +14,16 @@ public class LoginPage {
 	
 	    private By username = By.xpath("//input[@name='userName']");
 	    private By password = By.xpath("//input[@type='password']");
-	    private By loginBtn = By.xpath("//span[text()='Sign in']");
+	    private By loginBtn = By.xpath("//*[text()='Login']");
 	   
 
 	    public void enterUsername(String user) {
+	    	driver.findElement(username).clear();
 	        driver.findElement(username).sendKeys(user);
 	    }
 
 	    public void enterPassword(String pass) {
+	    	driver.findElement(password).clear();
 	        driver.findElement(password).sendKeys(pass);
 	    }
 
