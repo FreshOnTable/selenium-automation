@@ -11,8 +11,7 @@ public class TestNgRunner {
 		features = "src/test/java/FeatureFile", 
 		glue = "StepDefinition", 
 		monochrome = true, 
-
-			
+        tags = "@BusinessAccount",
 
 		plugin = { "html:target/cucmber.html", "json:target/cucumber.json"})
 
